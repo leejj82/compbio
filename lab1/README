@@ -24,3 +24,13 @@ To create a python script,
 emacs -nw lab1.py, implement, exit
 chmod +x lab1.py
 ./lab1.py
+
+
+To clone a Git repository
+git clone https://github.com/leejj82/compbio
+
+git add <filename>
+git commit -m "."
+git push
+
+git pull
