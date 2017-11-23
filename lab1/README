@@ -1,0 +1,26 @@
+wget http://cbcb.umd.edu/confcour/CMSC828H-materials/lab1.tar.gz
+tar xvzf lab1.tar.gz
+
+To connect to a server computer
+ssh nucleus
+
+To edit a file
+emacs -nw <filename>
+
+To exit Emacs
+ctrl+x,ctrl+c
+
+To save the current file
+ctrl+x,ctrl+s
+
+To cancel pending commands
+ctrl+g
+
+To view a text file in the terminal
+cat <filename>
+less <filename> space for next page, q for quit
+
+To create a python script,
+emacs -nw lab1.py, implement, exit
+chmod +x lab1.py
+./lab1.py
