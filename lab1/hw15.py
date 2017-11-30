@@ -43,6 +43,8 @@ if seq != "":
             numseq.append(3)
     seqs.append([seq_id, numseq])
     
+lengthofseqs=len(seqs)    
+
 def split(arr, size):
     arrs = []
     i=0
@@ -54,26 +56,33 @@ def split(arr, size):
     arrs.append(arr+[i+1])
     return arrs
 
-def my_cmp(x, y):
-    assert len(x) == len(y)
-    for i in range(len(x)):
-        if x[i] < y[i]:
-            return -1
-        elif x[i] > y[i]:
-            return 1
-    return 0
-
 temp=[]
+temp1=[]
+eachstrand=[]
+totalarray = []
 
-for i in range(0,1):
-    temp=split(seqs[i][1],10)
-    temp=sorted(temp, cmp=my_cmp)
+for i in range(0,lengthofseqs):
+    temp=split(seqs[i][1],20)
+    temp1=split(seqs[i][1],40)
+    eachstrand.append(temp)
+    eachstrand.append(temp1) 
+    totalarray.append(eachstrand)
+    eachstrand=[]
     
-print temp
-            
-            
+if len(seqs[0][1])%20 !=0:   
+    lengthoffirstcut=len(seqs[0][1])/20+1
+else:
+    lengthoffirstcut=len(seqs[0][1])/20
+    
+if len(seqs[0][1])%40 !=0:   
+    lengthofsecondcut=len(seqs[0][1])/40+1
+else:
+    lengthofsecondcut=len(seqs[0][1])/40
 
-
-
-
-
+for i in range(0,lengthofseqs-1):
+    for j in range(i+1,lengthofseqs-1):
+        for l in range(0,lengthoffirstcut):
+            for m in range(0,lengthofsecondcut):
+                for k in range(0,len(totalarray[j][1][m])-19):
+                    if totalarray[i][0][l][:20]==totalarray[j][1][m][k:k+20]:
+                        print i+1,l,j+1,m                                

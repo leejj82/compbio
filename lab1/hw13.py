@@ -54,25 +54,25 @@ def split(arr, size):
     arrs.append(arr+[i+1])
     return arrs
 
-def my_cmp(x, y):
-    assert len(x) == len(y)
-    for i in range(len(x)):
-        if x[i] < y[i]:
-            return -1
-        elif x[i] > y[i]:
-            return 1
-    return 0
-
 temp=[]
+temp1=[]
+eachstrand=[]
+totalarray = []
 
-for i in range(0,1):
+for i in range(0,10):
     temp=split(seqs[i][1],10)
-    temp=sorted(temp, cmp=my_cmp)
+    temp1=split(seqs[i][1],20)
+    eachstrand.append(temp)
+    eachstrand.append(temp1) 
+    totalarray.append(eachstrand)
     
-print temp
-            
-            
-
+for i in range(0,9):
+    for j in range(i+1,9):
+        for l in range(0,25):
+            for m in range(0,13):
+                for k in range(0,len(totalarray[j][1])-9):
+                    if totalarray[i][0][l][:10]==totalarray[j][1][m][k:k+10]:
+                        print i,l,j,m                                
 
 
 
