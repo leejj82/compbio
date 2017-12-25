@@ -4,6 +4,7 @@ from datetime import datetime, date, time
 
 # Debugging variables
 debug = True
+unit_test = True
 
 def func1():
     return
@@ -61,22 +62,25 @@ def simple_overlap(a, b):
     def simple_overlap_dir(a, b):
         for i in range(len(a)):
             same = True
-            for j in range(len(a) - i)):
-                if a[i + j] != b[j]:
+            for j in range(len(a) - i):
+                if a[j] != b[i + j]:
                     same = False
                     break
             if same and len(a) - i >= 40:
-                return 'F', len(a) - i
-        return None, None
+                return len(a) - i
+        return None
 
     b_rc = reversecomplement(b)
-    dir, olp = simple_overlap_dir(a, b)
-    if dir != None:
-        return dir, olp
-    simple_overlap_dir(b, a)
+    olp = simple_overlap_dir(a, b)
+    if olp != None:
+        return 'F', olp
+    olp = simple_overlap_dir(b, a)
+    if olp != None:
+        return 'F', -olp
     simple_overlap_dir(a, b_rc)
     simple_overlap_dir(b_rc, a)
-    # a --> rev(b)
+    
+    return None, None
         
 
 def jj_overlap(a, b):
@@ -114,6 +118,15 @@ def reversecomplement(arr):
         arrs.append(3-arr[i])
     arrs=arrs[::-1]     
     return arrs
+
+# Unit tests
+if unit_test:
+    test1 = ["tttggtgtgtgcacaagttaagtcgtgtacgcgtgggacaacctacactcttcgtcgtaccggatgcacgactgtgacgtactgaggtagcctaaggacgaaatgctttacgttgccagtcctgtaaacggggccaagaccgtccaagtcccaaccacctaggcccccgataatgcccgcgatggagacggaaatggagaggtgaacgtcagccccggccccgccgatcctattcgctgagtatagacgg", "cgatggagacggaaatggagaggtgaacgtcagccccggccccgccgatcctattcgctgagtatagacggagcgcgtacagtgccatgtgaatggcgcgggcatgcacgacataagttgaaggggggaaaaggccatctctggcttagtgcgattaagccccgccgtacccgcccctgcctggcgtcgacgacgacgcgcgacaacgaacagacacggcgcaagatagatgacccttgcttgatcttaa", ['F', 179]]
+
+    tests = [test1]
+    for seq1, seq2, ans in tests:
+        my_ans = jj_overlap(seq1, seq2)
+        assert my_ans == ans
 
 print >> sys.stderr, "Begin at", str(datetime.now())
 overlap_file = open("lab01.olaps", "w")
