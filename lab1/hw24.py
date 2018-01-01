@@ -15,11 +15,11 @@ readlength=500
 read_fname = "lab01.olaps"
     
 
+print >> sys.stderr, "Begin at", str(datetime.now())
 
 temp=[]
 edgecollection=[]
 edgespernode=[] #number of edges to each 
-nodeindex=[] #tells the starting point of each node in the array
 
 for i in range(0, numofreads-1):
     edgespernode.append(0)
@@ -41,18 +41,34 @@ for line in open(read_fname):
             temp.append(int(line[i+10:]))
     edgecollection.append(temp)
     edgespernode[temp[0]-1]+=1
-    temp=[]
+    temp=[]   
 
+skipped=[]
+temp=[]
+for i in range(0,len(edgecollection)):
+    if edgecollection[i][3]==0:
+        skipped.append(edgecollection[i])
+        for j in range(0,len(edgecollection)):
+            if edgecollection[j][0]==edgecollection[i][1] or edgecollection[j][1]==edgecollection[i][1]:
+                if j not in temp:
+                    temp.append(j)
+
+
+for j in range(0, len(temp)):
+    edgespernode[edgecollection[temp[len(temp)-j-1]][0]-1]-=1  
+    edgecollection.pop(temp[len(temp)-j-1])                                
+
+nodeindex=[] #tells the starting point of each node in the array                
 nodeindex.append(0)
 for i in range(0,numofreads-1):
-    nodeindex.append(nodeindex[i]+edgespernode[i])
-   
+    nodeindex.append(nodeindex[i]+edgespernode[i])           
+    
 def findtriangles(arr):
     arrs=[]
     for i in range(0, numofreads-1): #i read number
         for j in range(nodeindex[i], nodeindex[i+1]-1): # j j nodes linked to i
             m=nodeindex[arr[j][1]-1]
-            for k in range(j+1, nodeindex[i+1]): #k              
+            for k in range(j+1, nodeindex[i+1]): #k
                 for l in range(m, nodeindex[arr[j][1]]):
                     if arr[k][1]<arr[l][1]:
                         break
@@ -62,8 +78,6 @@ def findtriangles(arr):
                         break
                     if arr[k][1]>arr[l][1]:
                         m+=1     
-        
-
     return arrs
 
 def edgestodelete(arr):
@@ -92,99 +106,111 @@ def edgestodelete(arr):
                                     arrs.append(arr[i][l/2]) 
     return sorted(arrs)
 
-edgenumbertodelete=edgestodelete(findtriangles(edgecollection))
+triangles=findtriangles(edgecollection)
 
-#for i in range(0,len(edgenumbertodelete)):
-#    edgecollection.pop(edgenumbertodelete[len(edgenumbertodelete)-i-1])
-#    
-#alledges=[]
-#
-#for i in range(0, len(edgecollection)):
-#    if edgecollection[i][3]>0 and edgecollection[i][2]==0:
-#        alledges.append([[edgecollection[i][0],0],[edgecollection[i][1],0], edgecollection[i][3]])
-#        alledges.append([[edgecollection[i][1],1],[edgecollection[i][0],1], edgecollection[i][3]])
-#    if edgecollection[i][3]>0 and edgecollection[i][2]==1:
-#        alledges.append([[edgecollection[i][0],0],[edgecollection[i][1],1], edgecollection[i][3]])
-#        alledges.append([[edgecollection[i][1],0],[edgecollection[i][0],1],edgecollection[i][3]])
-#    if edgecollection[i][3]<0 and edgecollection[i][2]==0:
-#        alledges.append([[edgecollection[i][1],0],[edgecollection[i][0],0],-edgecollection[i][3]])
-#        alledges.append([[edgecollection[i][0],1],[edgecollection[i][1],1],-edgecollection[i][3]])
-#    if edgecollection[i][3]<0 and edgecollection[i][2]==1:
-#        alledges.append([[edgecollection[i][1],1],[edgecollection[i][0],0],-edgecollection[i][3]])
-#        alledges.append([[edgecollection[i][0],1],[edgecollection[i][1],0],-edgecollection[i][3]])
-#
-#unitigs=[]
-#
-#while len(alledges)!=0:
-#    unitig=[]
-#    indicator=0
-#        
-#    unitig.append(alledges[0][0])
-#    unitig.append(alledges[0][1])
-#    unitig.append(alledges[0])
-#    alledges.pop(0)
-#    alledges.pop(0)
-#    while indicator==0: #look backward
-#        record=[]
-#        for i in range(0, len(alledges)):
-#            if alledges[i][1]==unitig[0]:
-#                record.append(i)
-#                for j in range(0,len(alledges)):
-#                    if alledges[j][0]==alledges[i][0] and j!=i:
-#                        record.append(j)
-#        if len(record)==1:
-#            unitig=[alledges[record[0]][0]]+[unitig[1]]+[alledges[record[0]]]+unitig[2:]
-#            alledges.pop(record[0])
-#            alledges.pop(record[0]-record[0]%2) 
-#            record=[]
-#        elif len(record)==0:
-#            break
-#        else:
-#            record=sorted(record)
-#            t=len(record)
-#            for i in range(0,t):
-#                alledges.pop(record[t-i-1])
-#                alledges.pop(record[t-i-1]-record[t-i-1]%2)                   
-#            break
-#    while indicator==0: #look forward
-#        record=[]    
-#        for i in range(0, len(alledges)):
-#            if alledges[i][0]==unitig[1]:
-#                record.append(i)
-#                for j in range(0,len(alledges)):
-#                    if alledges[j][1]==alledges[i][1] and j!=i:
-#                        record.append(j)
-#        if len(record)==1:
-#            unitig.append(alledges[record[0]])
-#            unitig[1]=alledges[record[0]][1]
-#            alledges.pop(record[0])
-#            alledges.pop(record[0]-record[0]%2) 
-#            record=[]
-#        elif len(record)==0:
-#            break
-#        else:
-#            record=sorted(record)
-#            t=len(record)
-#            for i in range(0,t):
-#                alledges.pop(record[t-i-1])
-#                alledges.pop(record[t-i-1]-record[t-i-1]%2)                   
-#            break
-#    unitigs.append(unitig)
-#
-#print >> sys.stderr, "Begin at", str(datetime.now())
-#overlap_file = open("lab01.unis", "w")
-#for i in range(0,len(unitigs)):
-#    sum=readlength
-#    for j in range(0,len(unitigs[i])-2):
-#        sum+=unitigs[i][j+2][2]
-#    print >> overlap_file, "UNI", format(i+1, '02d'), len(unitigs[i])-1, sum   
-#    
-#    print >> overlap_file, "  ", format(unitigs[i][2][0][0],'03d'), 0  
-#    for j in range(1,len(unitigs[i])-2):
-#        print >> overlap_file, "  ", format(unitigs[i][j+2][0][0],'03d'), unitigs[i][j+1][2]  
-#    print >> overlap_file, "  ", format(unitigs[i][len(unitigs[i])-1][1][0],'03d'), unitigs[i][len(unitigs[i])-1][2]  
-#
-#overlap_file.close()
-#print >> sys.stderr, "Ends at", str(datetime.now())
+overlap_file = open("lab01.triangles.test", "w")
+for i in range(0,len(triangles)):
+        print >> overlap_file, triangles[i] , edgecollection[triangles[i][0]],edgecollection[triangles[i][1]],edgecollection[triangles[i][2]]
+overlap_file.close()
+
+edgenumbertodelete=edgestodelete(triangles)
+
+for i in range(0,len(edgenumbertodelete)):
+    edgecollection.pop(edgenumbertodelete[len(edgenumbertodelete)-i-1])
+    
+alledges=[]
+
+for i in range(0, len(edgecollection)):
+    if edgecollection[i][3]>0 and edgecollection[i][2]==0:
+        alledges.append([[edgecollection[i][0],0],[edgecollection[i][1],0], edgecollection[i][3]])
+        alledges.append([[edgecollection[i][1],1],[edgecollection[i][0],1], edgecollection[i][3]])
+    if edgecollection[i][3]>0 and edgecollection[i][2]==1:
+        alledges.append([[edgecollection[i][0],0],[edgecollection[i][1],1], edgecollection[i][3]])
+        alledges.append([[edgecollection[i][1],0],[edgecollection[i][0],1],edgecollection[i][3]])
+    if edgecollection[i][3]<0 and edgecollection[i][2]==0:
+        alledges.append([[edgecollection[i][1],0],[edgecollection[i][0],0],-edgecollection[i][3]])
+        alledges.append([[edgecollection[i][0],1],[edgecollection[i][1],1],-edgecollection[i][3]])
+    if edgecollection[i][3]<0 and edgecollection[i][2]==1:
+        alledges.append([[edgecollection[i][1],1],[edgecollection[i][0],0],-edgecollection[i][3]])
+        alledges.append([[edgecollection[i][0],1],[edgecollection[i][1],0],-edgecollection[i][3]])
+        
+overlap_file = open("lab01.edges.test", "w")
+for i in range(0,len(alledges)):
+        print >> overlap_file, alledges[i]
+overlap_file.close()
+
+
+unitigs=[]
+
+while len(alledges)!=0:
+    unitig=[]
+    indicator=0
+        
+    unitig.append(alledges[0][0])
+    unitig.append(alledges[0][1])
+    unitig.append(alledges[0])
+    alledges.pop(0)
+    alledges.pop(0)
+    while indicator==0: #look backward
+        record=[]
+        for i in range(0, len(alledges)):
+            if alledges[i][1]==unitig[0]:
+                record.append(i)
+                for j in range(0,len(alledges)):
+                    if alledges[j][0]==alledges[i][0] and j!=i:
+                        record.append(j)
+        if len(record)==1:
+            unitig=[alledges[record[0]][0]]+[unitig[1]]+[alledges[record[0]]]+unitig[2:]
+            alledges.pop(record[0])
+            alledges.pop(record[0]-record[0]%2) 
+            record=[]
+        elif len(record)==0:
+            break
+        else:
+            record=sorted(record)
+            t=len(record)
+            for i in range(0,t):
+                alledges.pop(record[t-i-1])
+                alledges.pop(record[t-i-1]-record[t-i-1]%2)                   
+            break
+    while indicator==0: #look forward
+        record=[]    
+        for i in range(0, len(alledges)):
+            if alledges[i][0]==unitig[1]:
+                record.append(i)
+                for j in range(0,len(alledges)):
+                    if alledges[j][1]==alledges[i][1] and j!=i:
+                        record.append(j)
+        if len(record)==1:
+            unitig.append(alledges[record[0]])
+            unitig[1]=alledges[record[0]][1]
+            alledges.pop(record[0])
+            alledges.pop(record[0]-record[0]%2) 
+            record=[]
+        elif len(record)==0:
+            break
+        else:
+            record=sorted(record)
+            t=len(record)
+            for i in range(0,t):
+                alledges.pop(record[t-i-1])
+                alledges.pop(record[t-i-1]-record[t-i-1]%2)                   
+            break
+    unitigs.append(unitig)
+
+overlap_file = open("lab01.unis", "w")
+for i in range(0,len(unitigs)):
+    sum=readlength
+    for j in range(0,len(unitigs[i])-2):
+        sum+=unitigs[i][j+2][2]
+    print >> overlap_file, "UNI", format(i+1, '02d'), len(unitigs[i])-1, sum   
+    
+    print >> overlap_file, "  ", format(unitigs[i][2][0][0],'03d'), unitigs[i][2][0][1], 0  
+    for j in range(1,len(unitigs[i])-2):
+        print >> overlap_file, "  ", format(unitigs[i][j+2][0][0],'03d'), unitigs[i][j+2][0][1], unitigs[i][j+1][2]  
+    print >> overlap_file, "  ", format(unitigs[i][len(unitigs[i])-1][1][0],'03d'), unitigs[i][len(unitigs[i])-1][1][1], unitigs[i][len(unitigs[i])-1][2]  
+
+overlap_file.close()
+print >> sys.stderr, "Ends at", str(datetime.now())
                 
 

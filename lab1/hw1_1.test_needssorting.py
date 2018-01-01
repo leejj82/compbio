@@ -69,22 +69,18 @@ for k in range(1,lengthofseqs):
             if seqs[compare-1][1][lengthofnumseq-j:]==seqs[i][1][:j]:
                 if j>=40:
                     print  >> overlap_file, format(compare, '03d'), format(i+1, '03d'),'F',500-j
-                    count+=1
                     break
             if seqs[compare-1][1][:j]==seqs[i][1][lengthofnumseq-j:]:
                 if j>=40:
                     print >> overlap_file, format(compare, '03d'),  format(i+1, '03d'),'F',-(500-j)
-                    count+=1
                     break
             if seqs[compare-1][1][lengthofnumseq-j:]==reversecomplement(seqs[i][1])[:j]:
                 if j>=40:
                     print >> overlap_file, format(compare, '03d'),  format(i+1, '03d'),'R', 500-j
-                    count+=1
                     break
             if seqs[compare-1][1][:j]==reversecomplement(seqs[i][1])[lengthofnumseq-j:]:
                 if j>=40:
                     print >> overlap_file, format(compare, '03d'),  format(i+1, '03d'),'R', -(500-j)
-                    count+=1
                     break           
-
+    print k
 overlap_file.close()

@@ -70,7 +70,11 @@ for i in range(0, lengthofseqs):
     temprear=seqs[i][1][-20:]
     for j in range(i+1, lengthofseqs):    
         reversetemp=reversecomplement(seqs[j][1])
-        for k in range(20,lengthofnumseq-19):
+        if seqs[i][1]==seqs[j][1]:
+            print >> overlap_file, seqs[i][0], seqs[j][0], "F", 0
+        if seqs[i][1]==reversetemp:
+            print >> overlap_file, seqs[i][0], seqs[j][0], "R", 0         
+        for k in range(20,lengthofnumseq-20):
             temp=seqs[j][1][k:k+20]
             if temprear==temp:
                 if seqs[j][1][0:k]==seqs[i][1][-20-k:-20]:
