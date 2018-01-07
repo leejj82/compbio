@@ -133,6 +133,19 @@ for i in range(0, len(edgecollection)):
     if edgecollection[i][3]<0 and edgecollection[i][2]==1:
         alledges.append([[edgecollection[i][1],1],[edgecollection[i][0],0],-edgecollection[i][3]])
         alledges.append([[edgecollection[i][0],1],[edgecollection[i][1],0],-edgecollection[i][3]])
+      
+skippedlist=[]
+for i in range(0, len(skipped)):
+    if skipped[i][2]==0:
+        skippedlist.append([[skipped[i][0],0],[skipped[i][1],0], skipped[i][3]])
+        skippedlist.append([[skipped[i][1],1],[skipped[i][0],1], skipped[i][3]])
+        skippedlist.append([[skipped[i][1],0],[skipped[i][0],0],-skipped[i][3]])
+        skippedlist.append([[skipped[i][0],1],[skipped[i][1],1],-skipped[i][3]])
+    if skipped[i][2]==1:
+        skippedlist.append([[skipped[i][0],0],[skipped[i][1],1], skipped[i][3]])
+        skippedlist.append([[skipped[i][1],0],[skipped[i][0],1],skipped[i][3]])
+        skippedlist.append([[skipped[i][1],1],[skipped[i][0],0],-skipped[i][3]])
+        skippedlist.append([[skipped[i][0],1],[skipped[i][1],0],-skipped[i][3]])
         
 overlap_file = open("lab01.edges.test", "w")
 for i in range(0,len(alledges)):
@@ -197,7 +210,22 @@ while len(alledges)!=0:
                 alledges.pop(record[t-i-1]-record[t-i-1]%2)                   
             break
     unitigs.append(unitig)
-
+   
+index=0
+for k in range(0, len(skippedlist)):
+    for i in range(0, len(unitigs)):
+        for j in range(0, len(unitigs[i])):
+            if unitigs[i][j][0]==skippedlist[k][0]:
+                unitigs[i][j][0]=skippedlist[k][1]
+                unitigs[i].insert(j,skippedlist[k])
+                index=1
+            if index==1:
+                break
+        if index==1:
+            break
+    if index==1:
+        break
+    
 overlap_file = open("lab01.unis", "w")
 for i in range(0,len(unitigs)):
     sum=readlength
