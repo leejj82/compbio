@@ -53,7 +53,6 @@ for i in range(0,len(edgecollection)):
                 if j not in temp:
                     temp.append(j)
 
-
 for j in range(0, len(temp)):
     edgespernode[edgecollection[temp[len(temp)-j-1]][0]-1]-=1  
     edgecollection.pop(temp[len(temp)-j-1])                                
@@ -128,14 +127,27 @@ for i in range(0, len(edgecollection)):
     if edgecollection[i][3]<0 and edgecollection[i][2]==1:
         alledges.append([[edgecollection[i][1],1],[edgecollection[i][0],0],-edgecollection[i][3]])
         alledges.append([[edgecollection[i][0],1],[edgecollection[i][1],0],-edgecollection[i][3]])
+
+skippedlist=[]
+for i in range(0, len(skipped)):
+    if skipped[i][2]==0:
+        skippedlist.append([[skipped[i][0],0],[skipped[i][1],0], skipped[i][3]])
+        skippedlist.append([[skipped[i][1],1],[skipped[i][0],1], skipped[i][3]])
+        skippedlist.append([[skipped[i][1],0],[skipped[i][0],0],-skipped[i][3]])
+        skippedlist.append([[skipped[i][0],1],[skipped[i][1],1],-skipped[i][3]])
+    if skipped[i][2]==1:
+        skippedlist.append([[skipped[i][0],0],[skipped[i][1],1], skipped[i][3]])
+        skippedlist.append([[skipped[i][1],0],[skipped[i][0],1],skipped[i][3]])
+        skippedlist.append([[skipped[i][1],1],[skipped[i][0],0],-skipped[i][3]])
+        skippedlist.append([[skipped[i][0],1],[skipped[i][1],0],-skipped[i][3]])
         
 overlap_file = open("lab01.alledges", "w")
 for i in range(0,len(alledges)):
         print >> overlap_file, alledges[i]
-overlap_file.close()
-
-
+overlap_file.close()        
+        
 unitigs=[]
+
 linkbetweenunitigs=[]
 
 while len(alledges)!=0:
@@ -199,7 +211,21 @@ while len(alledges)!=0:
             break
     unitigs.append(unitig)
 
-
+index=0
+for k in range(0, len(skippedlist)):#To be more precise, skipped need to be considered in all edges as well.
+    for i in range(0, len(unitigs)):
+        for j in range(0, len(unitigs[i])):
+            if unitigs[i][j][0]==skippedlist[k][0]:
+                unitigs[i][j][0]=skippedlist[k][1]
+                unitigs[i].insert(j,skippedlist[k])
+                index=1
+            if index==1:
+                break
+        if index==1:
+            break
+    if index==1:
+        break
+    
 overlap_file = open("lab01.unis", "w")
 for i in range(0,len(unitigs)):
     sum=readlength
@@ -213,7 +239,6 @@ for i in range(0,len(unitigs)):
     print >> overlap_file, "  ", format(unitigs[i][len(unitigs[i])-1][1][0],'03d'), unitigs[i][len(unitigs[i])-1][1][1], unitigs[i][len(unitigs[i])-1][2]  
 
 overlap_file.close()
-print >> sys.stderr, "Ends at", str(datetime.now())
 
 
 #linkbetweenunitigs
@@ -251,8 +276,30 @@ def reversecomplement(arr):
         arrs.append([temp1,temp2,arr[len(arr)-1-i][2]])
     return arrs
 
-import copy
+import copy  
+contigindex=0
 
+def contigiteration(arr1, arr4):
+    linkindex=[]
+    unitigtoattach=[]
+    global contigprimitive
+    global checklist
+    for i in range(0, len(linkbetweenunitigs)):
+        if linkbetweenunitigs[i][0]==arr1[-1][0]:
+            linkindex.append(linkbetweenunitigs[i])
+    if len(linkindex)==0:
+        contigprimitive=arr1
+        checklist=arr4
+    for i in range(0, len(linkindex)):
+        if linkindex[i][4][2]==0:
+            unitigtoattach=unitigs[linkindex[i][4][0]-1][2:]
+        elif linkindex[i][4][2]==1:
+            unitigtoattach=reversecomplement(unitigs[linkindex[i][4][0]-1][2:])
+        addcontig(arr1,linkindex[i], unitigtoattach, arr4)
+        if contigindex==1:
+            break                            
+                            
+  
 def addcontig(arr1, arr2, arr3, arr4):
     temp=[]
     arrs=copy.deepcopy(arr1)
@@ -263,91 +310,119 @@ def addcontig(arr1, arr2, arr3, arr4):
     for i in range(0,len(arr4)):
         for j in range(len(arr1), len(arrs)):
             if (arrs[arr4[i][0]][0][0]==arrs[j][0][0]+1 and arrs[arr4[i][0]][0][0]%2==0) or (arrs[arr4[i][0]][0][0]==arrs[j][0][0]-1 and arrs[j][0][0]%2==0) :
-                if 3100>=arrs[j][1]-arrs[arr4[i][0]][1]>=1900 and arrs[arr4[i][0]][0][1]!=arrs[j][0][1]:
-                    arrs[arr4[i][0]][2]=1
-                    arrs[j][2]=1
-                    temp.append(i)
-                else: 
-                    print "this unitig is not satisfying the condition for contig"
-                break
+                if arrs[arr4[i][0]][0][1]==0 and arrs[j][0][1]==1:#should start from 5 end to 3 end               
+                    if 3100>=arrs[j][1]-arrs[arr4[i][0]][1]>=1900:
+                        if arrs[arr4[i][0]][2]==0 and arrs[j][2]==0:
+                            arrs[arr4[i][0]][2]=1
+                            arrs[j][2]=1
+                            temp.append(i)
+                            break
+                        elif arrs[arr4[i][0]][0][2]!=arrs[j][2]:
+                            print "Something needs to be checked."                            
+                    
     for i in range(0, len(temp)):
         arrs2.pop(temp[len(temp)-1-i])
     
     for i in range(len(arr1), len(arrs)):
         for j in range(i+1, len(arrs)):
             if (arrs[i][0][0]==arrs[j][0][0]+1 and arrs[i][0][0]%2==0) or (arrs[i][0][0]==arrs[j][0][0]-1 and arrs[j][0][0]%2==0) :
-                if 3100>=arrs[j][1]-arrs[i][1]>=1900 and arrs[i][0][1]!=arrs[j][0][1]:
-                    arrs[i][2]=1
-                    arrs[j][2]=1
-                else: 
-                    print "this unitig is not satisfying the condition for contig"
-                break
-            
+                if arrs[i][0][1]==0 and arrs[j][0][1]==1:#should start from 5 end to 3 end
+                    if 3100>=arrs[j][1]-arrs[i][1]>=1900:
+                        if arrs[i][2]==0 and arrs[j][2]==0:
+                            arrs[i][2]=1
+                            arrs[j][2]=1
+                            break
+                        elif arrs[i][2]!=arrs[j][2]:
+                            print "Something needs to be checked."                    
+           
     for i in range(len(arr1), len(arrs)):
         if arrs[i][2]==0:
-            arrs2.append([i,arrs[i][1]])       
-    
-    return arrs,arrs2
-    
+            arrs2.append([i,arrs[i][1]])     
+            
+    for i in range(0,len(arrs2)):
+        if arrs[len(arrs)-1][1]-arrs2[i][1]>=3100:#make-pair check
+            if arrs[arrs2[i][0]-1][2]==1:
+                for j in range(arrs2[i][0],len(arrs)):
+                    if arrs[j][2]==1:
+                        break
+                if arrs[j][1]-arrs[arrs2[i][0]-1][1]>500:
+                    return                
+            if arrs[arrs2[i][0]][3][0]!=3:# Assuming 3 is the only repeat unitig
+                return 
+        else:                
+            break
+    contigiteration(arrs,arrs2)
+
+
 
 #contig=[a,b,c]        
 #a is a read
 #b is the read position
 #c=1 is if the read satisfies the condition for contig: pairs are within 2400 to 3600
        
-checklist=[]
+checklist_temp=[]
 
 def contigcheckfromzero(arr):
     for i in range(0, len(arr)):
         for j in range(i+1, len(arr)):
-            if (arr[i][0][0]==arr[j][0][0]+1 and arr[i][0][0]%2==0) or (arr[i][0][0]==arr[j][0][0]-1 and arr[j][0][0]%2==0) :
-                if 3100>=arr[j][1]-arr[i][1]>=1900 and arr[i][0][1]!=arr[j][0][1]:
-                    arr[i][2]=1
-                    arr[j][2]=1
-                else: 
-                    print "There is a problem in a unitig"
-                break
+            if (arr[i][0][0]==arr[j][0][0]+1 and arr[i][0][0]%2==0) or (arr[i][0][0]==arr[j][0][0]-1 and arr[j][0][0]%2==0):
+                if arr[i][0][1]==0 and arr[j][0][1]==1:#should start from 5 end to 3 end
+                    if 3100>=arr[j][1]-arr[i][1]>=1900: 
+                        if arr[i][2]==0 and arr[j][2]==0:
+                            arr[i][2]=1
+                            arr[j][2]=1
+                            break
+                        elif arr[i][2]!=arr[j][2]:
+                            print "Something needs to be checked."
     for i in range(0, len(arr)):
-        if contig[i][2]==0:
-            checklist.append([i,arr[i][1]])
-    return 0
-                
+        if contig_temp[i][2]==0:
+            checklist_temp.append([i,arr[i][1]])
                 
                 
 if len(possiblestartingpoints)>0:
     startingpoint=possiblestartingpoints[0]
-    contig=[]
+    contig_temp=[]
     if startingpoint[1]==0:
-        contig.append([unitigs[startingpoint[0]-1][2][0],0,0,startingpoint])
+        contig_temp.append([unitigs[startingpoint[0]-1][2][0],0,0,startingpoint])
         for i in range(1, len(unitigs[startingpoint[0]-1][2:])):
-            contig.append([unitigs[startingpoint[0]-1][2+i][0], contig[i-1][1]+unitigs[startingpoint[0]-1][1+i][2],0,startingpoint])
-        contig.append([unitigs[startingpoint[0]-1][2+i][1], contig[i][1]+unitigs[startingpoint[0]-1][2+i][2],0,startingpoint])
+            contig_temp.append([unitigs[startingpoint[0]-1][2+i][0], contig_temp[i-1][1]+unitigs[startingpoint[0]-1][1+i][2],0,startingpoint])
+        contig_temp.append([unitigs[startingpoint[0]-1][2+i][1], contig_temp[i][1]+unitigs[startingpoint[0]-1][2+i][2],0,startingpoint])
+        contigcheckfromzero(contig_temp)
         
-        contigcheckfromzero(contig)
-        
+        contigiteration(contig_temp,checklist_temp)  
     else:
         print "Not implemented yet."
-            
-    index=0
-    while index==0:
-        linkindex=[]
-        for i in range(0, len(linkbetweenunitigs)):
-            if linkbetweenunitigs[i][0]==contig[-1][0]:
-                linkindex.append(linkbetweenunitigs[i])
-        for i in range(0, len(linkindex)):
-            if linkindex[i][4][2]==0:
-                temp=unitigs[linkindex[i][4][0]-1][2:]
-            elif linkindex[i][4][2]==1:
-                temp=reversecomplement(unitigs[linkindex[i][4][0]-1][2:])
-            contigtemp,checklisttemp=addcontig(contig,linkindex[i], temp, checklist)
-        break
-                
-        
-    
-    
-    
 else:
-    print "No possible starting points."
-                
+    print "No possible starting points. Think of a middle point."
+ 
+overlap_file = open("lab01.contiginfo", "w")
+for i in range(0,len(contigprimitive)):
+        print >> overlap_file, contigprimitive[i]
+for i in range(0,len(checklist)):
+    print >> overlap_file, checklist[i]
+overlap_file.close()  
+
+#find mate-pair
+contig_pre=[0] * 300
+for i in range(0, len(contigprimitive)):
+    for j in range(i+1, len(contigprimitive)):
+        if (contigprimitive[i][0][0]==contigprimitive[j][0][0]+1 and contigprimitive[i][0][0]%2==0) or (contigprimitive[i][0][0]==contigprimitive[j][0][0]-1 and contigprimitive[j][0][0]%2==0):
+            if contigprimitive[i][0][1]==0 and contigprimitive[j][0][1]==1:#should start from 5 end to 3 end
+                if 3100>=contigprimitive[j][1]-contigprimitive[i][1]>=1900: 
+                    if contig_pre[contigprimitive[i][0][0]-1]==0 and contig_pre[contigprimitive[j][0][0]-1]==0:
+                        contig_pre[contigprimitive[i][0][0]-1]=[contigprimitive[i][0], contigprimitive[i][1],contigprimitive[i][1]+499, contigprimitive[i][3]]
+                        contig_pre[contigprimitive[j][0][0]-1]=[contigprimitive[j][0], contigprimitive[j][1],contigprimitive[j][1]+499,  contigprimitive[j][3]]
+                        break
+
+for i in range(0, len(contig_pre)):
+    if contig_pre[i]==0:
+        print "error"
+
+overlap_file = open("lab01.extra", "w")
+for i in range(0,len(contig_pre)):
+        print >> overlap_file, format(contig_pre[i][0][0],'03d'), " ",contig_pre[i][1+contig_pre[i][0][1]]," ", contig_pre[i][2-contig_pre[i][0][1]]
+overlap_file.close()
+
+print >> sys.stderr, "Ends at", str(datetime.now())
 
                     

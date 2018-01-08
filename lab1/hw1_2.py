@@ -53,7 +53,6 @@ for i in range(0,len(edgecollection)):
                 if j not in temp:
                     temp.append(j)
 
-
 for j in range(0, len(temp)):
     edgespernode[edgecollection[temp[len(temp)-j-1]][0]-1]-=1  
     edgecollection.pop(temp[len(temp)-j-1])                                
@@ -146,12 +145,11 @@ for i in range(0, len(skipped)):
         skippedlist.append([[skipped[i][1],0],[skipped[i][0],1],skipped[i][3]])
         skippedlist.append([[skipped[i][1],1],[skipped[i][0],0],-skipped[i][3]])
         skippedlist.append([[skipped[i][0],1],[skipped[i][1],0],-skipped[i][3]])
-        
+       
 overlap_file = open("lab01.edges.test", "w")
 for i in range(0,len(alledges)):
         print >> overlap_file, alledges[i]
 overlap_file.close()
-
 
 unitigs=[]
 
@@ -212,7 +210,7 @@ while len(alledges)!=0:
     unitigs.append(unitig)
    
 index=0
-for k in range(0, len(skippedlist)):
+for k in range(0, len(skippedlist)):#To be more precise, skipped need to be considered in all edges as well.
     for i in range(0, len(unitigs)):
         for j in range(0, len(unitigs[i])):
             if unitigs[i][j][0]==skippedlist[k][0]:
@@ -225,7 +223,7 @@ for k in range(0, len(skippedlist)):
             break
     if index==1:
         break
-    
+
 overlap_file = open("lab01.unis", "w")
 for i in range(0,len(unitigs)):
     sum=readlength
