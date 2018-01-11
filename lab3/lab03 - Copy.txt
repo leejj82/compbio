@@ -1,0 +1,157 @@
+CMSC 828N Laboratory 3
+
+This lab will involve writing your own, simple, bacterial gene finding
+ program.  
+Submit your answers as a SINGLE tarfile. Please include a file named README explaining what the files are and 
+how to run your code.   
+
+
+
+INPUT
+
+ 
+Your target genome is Staphylococcus aureus strain COL from NCBI. 
+
+The first file you need is NC_002951.fna, which is the fasta file of 
+the genome itself.  You will also need NC_002951.ptt, which is the
+"protein translation table," a file listing all the annotated protein-coding
+genes. 
+
+Staph is a relatively small bacterial genome.  This particular
+strain, S. aureus COL, is one of the early methocillin-resistant
+(MRSA) strains, a deadly variety of S. aureus that is endemic in hospitals
+ and many communities around the world.
+
+
+
+1. Write a program to find all open reading frames (ORFs) in the
+ genome.  Remember that this is a CIRCULAR chromosome, so ORFs can span 
+the endpoint of the string.  Also note that you need to find ORFs on
+ both the forward and the reverse strand.  The program should accept a 
+minimum ORF length as a parameter; thus a minimum of 200 means that it 
+will only identify ORFs that are 200bp or longer. Output should 
+include the ORF as a 4-tuple: a unique ID, two coordinates (start 
+codon position coordinate first), and either "+" or "-" to indicate 
+whether the ORF is on the forward or reverse strand.
+	
+For this assignment, an ORF is a maximal-length substring that begins at a
+ START codon and ends at a STOP, with no STOPs occurring in-frame prior
+to the final STOP.  Maximal here means that no ORF is properly
+ contained in another on the same DNA strand: in other words, use the
+ start codon that makes the longest ORF.  START codons must be one of
+(ATG,GTG) and STOP codons must be one of (TAA,TAG,TGA).  NOTE:
+coordinates of the ORFs should INCLUDE the stop codon.  Thus if the 
+start codon (ATG) occurs at positions 101,102,103, and the STOP is at 
+161,162,163, then the ORF is the closed interval [101,163], and has 
+length 63.  
+
+
+
+Note: use 1-based coordinates for your genomes. Thus the first base in 
+the genome is position 1, not zero.
+
+
+
+What to turn in:
+
+(a) Your program
+
+(b) A file showing all ORFs of 300bp or longer in the target genome. 
+Each line should look like this:
+ORF0001 45123 46123 +
+
+
+This file should be sorted by column 2, with one ORF per line.  Note 
+that because column 2 indicates the START codon and column 3 the STOP,
+column 2 will be larger than column 3 for genes on the reverse strand.
+
+
+
+2. Codon usage is a measurement of how frequently each of the 61
+ possible codons are used.  Compute the "expected" frequencies for 
+all 61 codons as follows.  First, collect all ORFs from part 1 
+that are 750 base pairs in length or longer.  (Ideally we would use a
+ set of "known" genes to compute these values, but instead we will use 
+these "long" ORFs as a surrogate.) 
+
+Next, count how many times each codon is used in the entire set of 
+long ORFs.  In order to avoid division by zero later, add a pseudo-count
+of 1 to each of these codon counts.  Thus all your codon counts
+will be at least 1.  Then, to determine the expected frequency of
+each codon, divide these counts by the total number of codons 
+in these ORFs.  You will now have 61 probabilities, one for each codon.
+
+Next, using the ORF list from part 1, count the occurrences of the 61 
+codons for each ORF.  Thus if a codon occurs one time in 
+an ORF with 200 codons, the count will be 1.  (Don't use pseudo-counts 
+for this part.)  Then compare each ORF's codon usage to the expected 
+frequencies as follows, by computing the chi-squared statistic of 
+the difference between the two distributions. 
+
+The chi-squared statistic is:
+
+	
+SUM[(observed-expected)^2/expected] 
+
+
+where the SUM is computed over all 61 codons. 
+
+The "expected" number
+ of occurrences for any codon in an ORF is the expected frequency of 
+that codon (computed above) times the number of codons in the ORF. 
+For example, if the expected frequency of CCC is 2%, then for an ORF
+with 200 codons you would expect 4 of its codons to be CCC. 
+
+Finally, note that a "typical" ORF will have a low chi-squared statistic.
+
+ 
+
+What to turn in:
+
+(a) your program
+
+(b) a file with the 61 expected frequencies for codons. Each line should have 
+two values, a codon and its frequency.  Sort this alphabetically by codon.
+
+(c) A file with all the chi-squared scores for the ORFs output in part 1.
+
+
+
+For (c), create a file of all ORFs as in part 1, but this time output five
+ columns: the ORF ID, coordinates, orientation, and the chi-square
+ statistic for that ORF.  Note that the first four columns are 
+identical to those for part 1.
+
+
+
+3. (Simple gene finder).  For each ORF in the ORF list from parts 1 and 2, 
+determine whether or not it is a gene by the following very simple test:
+
+
+(a) if the ORF doesn't overlap another ORF on either strand, then call it a gene.
+
+(b) if the ORF overlaps other ORFs, and if it has a lower chi-squared statistic than any of its overlapping ORFs, then call it a gene.
+Note that you should only need the output of part 2 as input to this program. 
+
+Finally, compare these predictions to the annotation in GenBank for the target
+genome. For each ORF in your list, consider it correct if it has the same STOP 
+codon as the gene in the ptt file.  Don't worry about the start codons.  
+Compute the number of genes from your list that match the annotation.
+
+
+
+What to turn in:
+
+(a) your program
+
+(b) A file with all the "genes", in the same format as the output from part 2.
+
+(c) Report the number of genes in your predictions that match annotation as three 
+values: 
+  
+(c.1) the total count of correctly predicted genes, where "correct" is defined as above
+  
+(c.2) the sensitivity (total count in c.1 divided by number of genes listed in the ptt file)
+  
+(c.3) the precision (total count in c.1 divided by the number of genes you predicted in (b).
+

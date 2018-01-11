@@ -1,0 +1,45 @@
+Lab 2, CMSC 828N: Comparative Assembly
+
+For this lab, you will use the MUMmer alignment system and the AMOScmp
+and minimus assemblers to assemble a set of reads that we provide.  As
+preparation for this lab, you need to download and install MUMmer,
+AMOScmp, and minimus.  Links to these systems can be found at
+http://cbcb.umd.edu/software.  AMOScmp and minimus are both contained
+in the AMOS distribution.  Installation is straightforward; just
+follow the README files contained with both distributions.
+Essentially you just unpack the files and then type 'configure'
+followed by 'make install'. AMOScmp depends on having MUMmer available
+and in your path.
+
+Input to both AMOScmp and minimus is an "afg" file, which we have
+already created for you. This file is lab02.afg, available on the
+course syllabus page with this assignment.
+
+
+1. Use BLAST to determine the species to use as a reference. This will
+   be the same species as your target genome.  Report the name of the
+   species.
+
+2. Use minimus to create a de novo assembly of the sequences in 
+   lab02.afg.  If you want to be more ambitious, you can try running
+   another de novo assembler such as Celera Assembler, which can be
+   found in SourceForge.  Turn in your assembly as a multi-fasta file
+   containing just the contigs.
+
+3. Use AMOScmp to assemble the sequences in lab02.afg. You should
+   download the reference genome from Genbank. The result will be a
+   set of contigs.  Turn in your assembly as a multi-fasta file
+   containing just the contigs.
+
+4. Using the nucmer package within MUMmer, compare your two assemblies
+   to the reference genome.  
+   (a) For the minimus assembly, turn in an ordered list of contig IDs, 
+   indicating "for" or "rev" for each ID.  
+   (b) Turn in a short, written description of the differences 
+   between your minimus assembly and the reference genome.
+   This should be no more than a paragraph. You should describe how
+   how similar the contigs are (identical? 99% identical? other?) to 
+   the reference.  Identify any mis-assemblies.
+   (c) Turn in a similar short description of your AMOScmp assembly
+   as compared to the reference genome.  How many gaps are there, and
+   how large are they?  What is the overall identity?
