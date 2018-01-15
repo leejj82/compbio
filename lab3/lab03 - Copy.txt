@@ -17,7 +17,7 @@ the genome itself.  You will also need NC_002951.ptt, which is the
 "protein translation table," a file listing all the annotated protein-coding
 genes. 
 
-Staph is a relatively small bacterial genome.  This particular
+Staph is a relatively small bacterial genome. This particular
 strain, S. aureus COL, is one of the early methocillin-resistant
 (MRSA) strains, a deadly variety of S. aureus that is endemic in hospitals
  and many communities around the world.
@@ -35,10 +35,10 @@ codon position coordinate first), and either "+" or "-" to indicate
 whether the ORF is on the forward or reverse strand.
 	
 For this assignment, an ORF is a maximal-length substring that begins at a
- START codon and ends at a STOP, with no STOPs occurring in-frame prior
+ START codon and ends at a STOP, with no STOPs occurring in-frame prior 
 to the final STOP.  Maximal here means that no ORF is properly
  contained in another on the same DNA strand: in other words, use the
- start codon that makes the longest ORF.  START codons must be one of
+ start codon that makes the longest ORF.  START codons must be one of 
 (ATG,GTG) and STOP codons must be one of (TAA,TAG,TGA).  NOTE:
 coordinates of the ORFs should INCLUDE the stop codon.  Thus if the 
 start codon (ATG) occurs at positions 101,102,103, and the STOP is at 

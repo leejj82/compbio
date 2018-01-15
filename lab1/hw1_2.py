@@ -2,8 +2,6 @@
 import sys
 from datetime import datetime, date, time
 
-def func1():
-    return
 #a=0,c=1,g=2,t=3
 
 #numofreads=10

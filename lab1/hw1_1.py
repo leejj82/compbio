@@ -4,9 +4,6 @@ from datetime import datetime, date, time
 
 print >> sys.stderr, "Begin at", str(datetime.now())
 
-def func1():
-    return
-
 seqs = []
 seq = ""
 numseq=[]
