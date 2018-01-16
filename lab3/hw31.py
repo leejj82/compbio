@@ -37,7 +37,8 @@ for line in open(read_fname):
     line = line.strip()
     dna_seq_in_num.extend(change_seq_to_num(line))
 
-len_of_dna_seq=len(dna_seq_in_num)
+dna_seq_in_num_circ=dna_seq_in_num.append(dna_seq_in_num[0:2])
+len_of_dna_seq_in_num_circ=len(dna_seq_in_num_circ)
 
 for codon in range(len(start_codons)):
     start_codons_in_num.append(change_seq_to_num(start_codons[codon]))
@@ -55,18 +56,40 @@ def reverse_complement(list):
 def compare_start_codons(list):
     for i in range(len_start_codons):
         if list==start_codons_in_num[i]:
-            return [1,i]
-    return [0,0]
+            return 1
+    return 0
 
 def compare_stop_codons(list):
     for i in range(len_stop_codons):
         if list==stop_codons_in_num[i]:
-            return [1,i]
-    return [0,0]    
+            return 1
+    return 0
 
-for i in range(len_of_dna_seq):
-    if compare_start_codons(dna_seq_in_num[i:i+3])[0]==1:
-        print i
+for i in range(len(len_of_dna_seq)-2):
+    if compare_start_codons(dna_seq_in_num[i:i+3])==1:
+
+
+
+
+
+
+i,j=0,-1
+while i<len_of_dna_seq-2 and j<len_of_dna_seq-2:
+    for i in range(j+1, len_of_dna_seq-2):
+        index=compare_start_codons(dna_seq_in_num[i:i+3])
+        if index==1:
+            for j in range(i+3,len_of_dna_seq-2):
+                index=compare_stop_codons(dna_seq_in_num[j:j+3])
+                if index==1:
+                    break
+            break
+    if j-i>=200:
+        print i,j
+
+
+
+
+
         
 
 
