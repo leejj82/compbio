@@ -8,7 +8,7 @@ from datetime import datetime, date, time
 
 print >> sys.stderr, "Begin at", str(datetime.now())
 
-min_ORF_len=300
+
 start_codons=['ATG','GTG']
 stop_codons=['TAA','TAG','TGA']
 
@@ -36,9 +36,18 @@ read_fname = "NC_002951.fna"
 
 for line in open(read_fname):
     line = line.strip()
-    dna_seq_in_num.extend(change_seq_to_num(line))
-
+    if line[0] != '>':
+        dna_seq_in_num.extend(change_seq_to_num(line))
+    
 len_of_dna_seq_in_num=len(dna_seq_in_num)
+
+overlap_file = open("lab03.dnas", "w")
+for i in range(9781,10612):
+    print >> overlap_file, dna_seq_in_num[i], i+1
+overlap_file.close()
+
+
+
 
 for codon in range(len(start_codons)):
     start_codons_in_num.append(change_seq_to_num(start_codons[codon]))
@@ -107,8 +116,12 @@ def maximal_ORFs(ORFlist):
     max_ORFs=[]
     for i in range(3):
         max_ORFs.extend(ORFlist[i])
-    sorted(max_ORFs, key=lambda ORFs: ORFs[0]) 
-
+    max_ORFs=sorted(max_ORFs, key=lambda ORFs: ORFs[0]) 
+#    overlap_file = open("lab03.ORFs", "a")
+#    for i in range(0,len(max_ORFs)):
+#        print >> overlap_file, max_ORFs[i],i
+#    overlap_file.close()
+#    print len(max_ORFs)
     index=[]
     for j in range(len(max_ORFs)-1):
         for k in range(j+1, len(max_ORFs)):
@@ -118,8 +131,10 @@ def maximal_ORFs(ORFlist):
             if max_ORFs[k][0]>max_ORFs[j][1]:
                 break
     sorted(index)
+#    print index
     for i in range(len(index)):
         max_ORFs.pop(index[len(index)-i-1])
+#    print len(max_ORFs)
     return max_ORFs
 
 def reverse(list):
@@ -152,6 +167,8 @@ def merge(ORF_of_min_len, ORF_of_min_len_reverse):
         for k in range(j, len_M):
             ORFs.append([ORF_of_min_len_reverse[k][0],ORF_of_min_len_reverse[k][1],'-']) 
     return ORFs
+
+min_ORF_len=300
 
 ORF_of_min_len=maximal_ORFs(find_ORF_of_len(dna_seq_in_num))
 ORF_of_min_len_reverse=reverse(maximal_ORFs(find_ORF_of_len(reverse_complement(dna_seq_in_num))))
