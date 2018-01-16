@@ -164,12 +164,4 @@ for i in range(0,len(ORFs)):
 overlap_file.close()
 
 
-#def reverse_index(list):
-#    len_of_list=len(list)
-#    temp=[]
-#    for i in range(len_of_list):
-#        temp.append([list[len_of_list-1-i][1],list[len_of_list-1-i][0]])
-
-
-
 print >> sys.stderr, "Ends at", str(datetime.now())
