@@ -41,10 +41,10 @@ for line in open(read_fname):
     
 len_of_dna_seq_in_num=len(dna_seq_in_num)
 
-overlap_file = open("lab03.dnas", "w")
-for i in range(9781,10612):
-    print >> overlap_file, dna_seq_in_num[i], i+1
-overlap_file.close()
+#overlap_file = open("lab03.dnas", "w")
+#for i in range(9781,10612):
+#    print >> overlap_file, dna_seq_in_num[i], i+1
+#overlap_file.close()
 
 
 
