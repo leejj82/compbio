@@ -34,3 +34,5 @@ git commit -m "."
 git push
 
 git pull
+
+awk '{if($3 >= 100) print}' NC_002951.ptt | wc -l
