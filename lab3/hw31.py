@@ -168,6 +168,7 @@ def merge(ORF_of_min_len, ORF_of_min_len_reverse):
             ORFs.append([ORF_of_min_len_reverse[k][0],ORF_of_min_len_reverse[k][1],'-']) 
     return ORFs
 
+#1
 min_ORF_len=300
 
 ORF_of_min_len=maximal_ORFs(find_ORF_of_len(dna_seq_in_num))
@@ -176,9 +177,46 @@ ORF_of_min_len_reverse=reverse(maximal_ORFs(find_ORF_of_len(reverse_complement(d
 ORFs=merge(ORF_of_min_len, ORF_of_min_len_reverse)
         
 overlap_file = open("lab03.ORF", "w")
+for i in range(len(ORFs)):
+    print >> overlap_file, "ORF"+format(i+1, '04d'), ORFs[i][0], ORFs[i][1], ORFs[i][2]
+overlap_file.close()
+
+#2
+min_ORF_len=750
+
+#create 61 codons
+codons=[]
+for i in range(4):
+    for j in range(4):
+        for k in range(4):
+            if [i,j,k] not in stop_codons_in_num:
+                codons.append([i,j,k])
+
+#assert len(codons)==61
+
+ORF_of_min_len=maximal_ORFs(find_ORF_of_len(dna_seq_in_num))
+ORF_of_min_len_reverse=reverse(maximal_ORFs(find_ORF_of_len(reverse_complement(dna_seq_in_num))))
+
+
+codoncount=[1]*61
+
+for i in range(ORF_of_min_len):
+    
+
+overlap_file = open("lab03.ORF", "w")
 for i in range(0,len(ORFs)):
     print >> overlap_file, "ORF"+format(i+1, '04d'), ORFs[i][0], ORFs[i][1], ORFs[i][2]
 overlap_file.close()
+
+
+
+
+
+
+
+
+
+
 
 
 print >> sys.stderr, "Ends at", str(datetime.now())
