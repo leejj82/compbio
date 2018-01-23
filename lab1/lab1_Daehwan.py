@@ -800,7 +800,7 @@ class Assembler:
     def execute(self, input_file_name):
         self.Setting(input_file_name)
         self.Read_fastaFile()
-        # self.Overlap()
+        self.Overlap()
         self.Unitig()
         self.ContigAndExtra()
 
