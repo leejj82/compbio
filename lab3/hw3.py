@@ -300,10 +300,13 @@ for i in range(len(ORFs)):
 
 for i in range(len(ORFs)):
     ORFs[i].append(chi_square[i])
+
+for i in range(len(ORFs)):
+    ORFs[i].append("ORF"+format(i+1, '04d'))
     
 overlap_file = open("lab03.ORF_with_Chi_square", "w")
 for i in range(len(ORFs)):
-    print >> overlap_file, "ORF"+format(i+1, '04d'), ORFs[i][0], ORFs[i][1], ORFs[i][2],ORFs[i][3]
+    print >> overlap_file, ORFs[i][4], ORFs[i][0], ORFs[i][1], ORFs[i][2],ORFs[i][3]
 overlap_file.close()
 
 #we didnt consider ORFs ranging from the end to the beginning of the sequence altogether because there were none of those.
@@ -332,6 +335,8 @@ for i in range(len(ORFs)):
                 else:
                     print i, 'and', j, 'have the same chi-square statistics'                    
         
+
+    
 genes=copy.deepcopy(ORFs)
  
 len_index=len(index)
@@ -341,7 +346,7 @@ for i in range(len_index):
         
 overlap_file = open("lab03.genes", "w")
 for i in range(len(genes)):
-    print >> overlap_file, "ORF"+format(i+1, '04d'), genes[i][0], genes[i][1], genes[i][2],genes[i][3]
+    print >> overlap_file, genes[i][4], genes[i][0], genes[i][1], genes[i][2],genes[i][3]
 overlap_file.close()       
         
     
