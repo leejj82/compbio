@@ -43,3 +43,9 @@ module add
 module rm
 
 python (check python version)
+
+
+c++ compile
+
+>make
+>./lab1
