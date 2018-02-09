@@ -5,6 +5,15 @@
 
 using namespace std;
 
+#if SAMPLE
+const int num_of_reads = 10;
+const int read_len = 250;
+#else
+const int num_of_reads = 300;
+const int read_len = 500;
+#endif
+
+
 void KMP_table(char *pat, int M, int *failure)
 {
   int pos = 1;
@@ -94,12 +103,16 @@ int pattern_example()
 }
 
 
-void read_from_fasta(char **list_of_reads)
+void read_from_fasta(char list_of_reads[][read_len + 1])
 {
   char str[500];
   //char *str= temp;
    int i=0;
+#if SAMPLE
+  ifstream infile("sample.fasta");
+#else
   ifstream infile("lab01.fasta");
+#endif
   if (infile.is_open()) {
     while (infile >> str)
       {
@@ -115,9 +128,9 @@ void read_from_fasta(char **list_of_reads)
   }
   infile.close();
 
-#if DEBUG
+#if DEBUG || 1
   int num_reads = 0;
-  for(int i = 0; i < 300; i++) {
+  for(int i = 0; i < num_of_reads; i++) {
     char* str = list_of_reads[i];
     int len = strlen(str);
     if(len <= 0) break;
@@ -136,7 +149,7 @@ void read_from_fasta(char **list_of_reads)
 #endif
 }
 
-void reversecomplement(int num_of_reads,int read_length, char **list, char **list_rc){
+void reversecomplement(int num_of_reads,int read_length, char list[][read_len + 1], char list_rc[][read_len + 1]){
   for (int j=0;j<num_of_reads;j++)
     {
       for (int i=0;i<read_length;i++)
@@ -192,12 +205,12 @@ void find_overlaps_of_two_reads(int read_length, char *list_original, char *list
 int main()
 {
   //define reads and get an input from a file
-  int num_of_reads=300;
+  //int num_of_reads=300;
   
-  char *list_of_reads[num_of_reads];
+  char list_of_reads[num_of_reads][read_len + 1];
   for (int i=0;i<num_of_reads;i++)
     {
-      list_of_reads[i]=(char*)malloc(501);
+      // list_of_reads[i]=(char*)malloc(501);
       list_of_reads[i][0] = '\0';
     }
 
@@ -206,10 +219,9 @@ int main()
   int read_length=strlen(list_of_reads[0]);
 
   //define reverse complement reads
-  char  *list_of_reads_RC[num_of_reads];
+  char  list_of_reads_RC[num_of_reads][read_len + 1];
   for (int i=0;i<num_of_reads;i++)
     {
-      list_of_reads_RC[i]=(char*)malloc(501);
       list_of_reads_RC[i][0] = '\0';
     }
   
