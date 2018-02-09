@@ -1,4 +1,4 @@
-#include<bits/stdc++.h>
+#include<iostream>
 #include<fstream>
 #include<string>
 #include<vector>
@@ -96,8 +96,8 @@ int pattern_example()
 
 void read_from_fasta(char **list_of_reads)
 {
-  char temp[500];
-  char *str= temp;
+  char str[500];
+  //char *str= temp;
    int i=0;
   ifstream infile("lab01.fasta");
   if (infile.is_open()) {
@@ -114,6 +114,26 @@ void read_from_fasta(char **list_of_reads)
       }
   }
   infile.close();
+
+#if DEBUG
+  int num_reads = 0;
+  for(int i = 0; i < 300; i++) {
+    char* str = list_of_reads[i];
+    int len = strlen(str);
+    if(len <= 0) break;
+    if(len != 500) {
+      cerr << "Error: read " << i + 1 << " is not correct." << endl;
+    }
+    num_reads++;
+  }
+
+  cerr << "Number of reads: " << num_reads << endl;
+#endif
+
+#if 0
+  int a = 0;
+  int b = 0;
+#endif
 }
 
 void reversecomplement(int num_of_reads,int read_length, char **list, char **list_rc){
@@ -178,6 +198,7 @@ int main()
   for (int i=0;i<num_of_reads;i++)
     {
       list_of_reads[i]=(char*)malloc(501);
+      list_of_reads[i][0] = '\0';
     }
 
   read_from_fasta(list_of_reads);
@@ -189,6 +210,7 @@ int main()
   for (int i=0;i<num_of_reads;i++)
     {
       list_of_reads_RC[i]=(char*)malloc(501);
+      list_of_reads_RC[i][0] = '\0';
     }
   
   reversecomplement(num_of_reads, read_length, list_of_reads, list_of_reads_RC);
