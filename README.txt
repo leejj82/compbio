@@ -48,6 +48,7 @@ git pull
 awk '{if($3 >= 100) print}' NC_002951.ptt | wc -l
 
 module (add programs such as python 3)
+module avail
 module list
 module add
 module rm
