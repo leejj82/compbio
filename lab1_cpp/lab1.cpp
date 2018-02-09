@@ -13,6 +13,34 @@ const int num_of_reads = 300;
 const int read_len = 500;
 #endif
 
+class Edge
+{
+public:
+  int a;
+  int b;
+};
+
+struct mycmp {
+  bool operator() (const Edge& e1, const Edge& e2) {
+    if(e1.a < e2.a)
+      return true;
+    else if(e2.a < e1.a)
+      return false;
+
+    return false;
+  }
+} myobject;
+
+void test_sort() {
+  Edge edges[2];
+  edges[0].a = 10;
+  edges[1].a = 5;
+
+  sort(edges, edges+2, myobject);
+
+  cout << "1: " << edges[0].a << endl;
+  cout << "2: " << edges[1].a << endl;
+}
 
 void KMP_table(char *pat, int M, int *failure)
 {
@@ -206,6 +234,9 @@ int main()
 {
   //define reads and get an input from a file
   //int num_of_reads=300;
+
+  test_sort();
+  exit(1);
   
   char list_of_reads[num_of_reads][read_len + 1];
   for (int i=0;i<num_of_reads;i++)
