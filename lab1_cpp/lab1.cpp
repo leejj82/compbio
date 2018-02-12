@@ -50,7 +50,7 @@ void KMP_table(char *pat,int *failure){
   int cnd;
   failure[0] = -1;
 
-  for (int pos=1;pos < 20;pos++){
+  for (int pos=1;pos < 40;pos++){
     cnd=failure[pos-1];
 
     while((pat[pos]!=pat[cnd+1]) && (cnd>=0)){
@@ -64,68 +64,49 @@ void KMP_table(char *pat,int *failure){
       failure[pos]=-1;
     }
   }
-  cout<<pat<<"\n";
-  for (int i=0;i<20;i++){
-    cout<<failure[i];
+}
+
+int check_rest(int RIGHT_LEFT, int match_start, int match_end, char *list_original, char *list_compare){
+  int i;
+  if (RIGHT_LEFT==0){
+    for (i=0;i<match_start;i++){
+      if (list_original[read_len-match_end+i-1]!=list_compare[i])
+	return 0;
+    }
   }
+  else {
+    for(i=match_end+1;i<read_len;i++){
+      if (list_original[i-match_start]!=list_compare[i])
+	return 0;
+    }
+  }
+
+  return 1;
+
 }
 
-void KMP_search(char *pat, char *txt){
+int KMP_search(char *list_original, char *pat,int RIGHT_LEFT, char *list_compare, int *failure, int *Overlap){
 
-  int failure[20];
+  int i=0,j,matched_len=0, match_start,match_end;
 
-  KMP_table(pat, failure);
-
-  //  cout<<pat<<"\n"<<txt<<"\n";
-  /*  
-  int m = 0;
-  int i = 0;
-  while (m+i < read_len){
-    if (pat[i] == txt[m+i])
-    {
-      if (i+1 == 20)
-      {
-	cout<<"Found pattern at index "<<m<<endl;
-	for (int k=m;k<m+20;k++)
-	  {
-	    cout<<txt[k];
-	  }
-	cout<<endl;
-	for (int k=0;k<20;k++)
-	  {
-	    cout<<failure[k];
-	  }
-	cout<<endl;
-      	m=m+i-failure[i];
-	i=failure[i];
-      }
-      else
-      {
-	i=i+1;
-      }
+  while (i < read_len){
+    if (pat[matched_len] == list_compare[i]){
+      i++;matched_len++;
     }
-    else{
-      if (failure[i]>-1){
-	  m=m+i-failure[i];
-	  i=failure[i];	  
-	}
-      else{
-	  m=m+i+1;
-	  i=0;
-	}
+    else if (matched_len==0)
+      i++;
+    else
+      matched_len=failure[matched_len-1]+1;
+    if (matched_len==40){
+      match_start=i-40;
+      match_end=i-1;
+      if (check_rest(RIGHT_LEFT, match_start,match_end,list_original,list_compare)==1)
+	*Overlap=-RIGHT_LEFT*match_start+(1-RIGHT_LEFT)*(read_len-match_end-1);
+	return 1;
     }
-  }*/
-}
-
-/*
-int pattern_example(){
-
-  char *txt = "ABABDABACDABABCABABDSEABABCABAB";
-  char *pat = "ABABCABAB";
-  KMP_search(pat, txt);
+  }
   return 0;
 }
-*/
 
 void read_from_fasta(char list_of_reads[][read_len + 1]){
 
@@ -202,53 +183,98 @@ void reversecomplement(char list[][read_len + 1], char list_rc[][read_len + 1]){
     }
  }
 
-/*
-void find_overlaps(int num_of_reads,int read_length, char **list, char **list_rc){
+int find_overlaps_of_two_reads(char list_original[read_len + 1], char list_compare[read_len + 1], char list_compare_rc[read_len+1],int *Forward_Backward,int *Overlap){
 
-  for (int i=0;i<num_of_reads;i++)
-    {
-      for (int j=i+1;j<num_of_reads;j++)
-	{
-	  find_overlaps_of_two_reads(read_length, list[i],list[j],list_rc[j]);
-	}
-    }
-}
-*/
-
-void find_overlaps_of_two_reads(char list_original[read_len + 1], char list_compare[read_len + 1], char list_compare_rc[read_len+1]){
-
-  char right_end[21];
-  char left_end[21];
-
+  char right_end[41];
+  char left_end[41];
+  int  failure[40];
+  int RIGHT=0;
+  int LEFT=1;
+  int found=0;
   for (int i=0;i<read_len;i++){
-      strncpy(right_end, list_original+read_len-20,20);
-      strncpy(left_end, list_original,20);
-      right_end[20]='\0';
-      left_end[20]='\0';
+      strncpy(right_end, list_original+read_len-40,40);
+      strncpy(left_end, list_original,40);
+      right_end[40]='\0';
+      left_end[40]='\0';
     }
 
-  KMP_search(right_end, list_compare);
- 
-  /* 
-  KMP_search(right_end, list_compare_rc);
-  KMP_search(left_end, list_compare);
-  KMP_search(left_end, list_compare_rc);
-  cout<<"done";
-  */
+  if (found==0){ 
+    KMP_table(right_end, failure);
+    found=KMP_search(list_original, right_end, RIGHT, list_compare, failure, Overlap);
+    *Forward_Backward=1;
+    if (found==0){
+      found=KMP_search(list_original, right_end, RIGHT, list_compare_rc, failure, Overlap);
+       *Forward_Backward=0;
+      if (found==0){
+	KMP_table(left_end, failure);
+	found=KMP_search(list_original, left_end, LEFT, list_compare, failure, Overlap);
+	 *Forward_Backward=1;
+	if (found==0){
+	  found=KMP_search(list_original, left_end, LEFT, list_compare_rc, failure, Overlap);
+	   *Forward_Backward=0;
+	}
+      }
+    }
+  }
+  return found;
 }
-	  
+
+int find_overlaps(char list_of_reads[][read_len+1],char list_of_reads_RC[][read_len+1],int list_of_overlaps[][4]){
+  int i, j ,k=0;
+  int Forward_Backward[1], Overlap[1];
+  for (i=0;i<num_of_reads-1;i++){
+    for (j=i+1;j<num_of_reads;j++){
+      if (find_overlaps_of_two_reads(list_of_reads[i],list_of_reads[j],list_of_reads_RC[j],Forward_Backward,Overlap)==1){
+	list_of_overlaps[k][0]=i;
+	list_of_overlaps[k][1]=j;
+	list_of_overlaps[k][2]=*Forward_Backward;
+	list_of_overlaps[k][3]=*Overlap;
+	k++;
+      }
+    }
+  }
+  return k;
+}
+
+void print_overlaps(int number_of_overlaps, int list_of_overlaps[][4]){
+  int i,ind;
+
+  FILE * pFile;
+
+  #if SAMPLE
+  pFile = fopen ("sample.olaps","w");
+  #else
+  pFile = fopen ("lab1.olaps","w");
+  #endif
+
+  for (i=0;i<number_of_overlaps;i++){
+    fprintf (pFile, " %03d  ",list_of_overlaps[i][0]+1);
+    fprintf (pFile, "%03d  ",list_of_overlaps[i][1]+1);
+    ind=list_of_overlaps[i][2];  
+    if (ind==1)
+      fprintf (pFile, "F  ");
+    else
+      fprintf (pFile, "R  ");
+    fprintf (pFile, "%*d\n",4,list_of_overlaps[i][3]);
+  }
+  
+  fclose (pFile);
+}
+
+
 int main()
 {
+  int i, j;
+
   //define reads and get an input from a file
   //int num_of_reads=300;
 
   #if SAMPLE
   test_sort();
-  exit(1);
   #endif
 
   char list_of_reads[num_of_reads][read_len + 1];
-  for (int i=0;i<num_of_reads;i++){
+  for (i=0;i<num_of_reads;i++){
       // list_of_reads[i]=(char*)malloc(501);
       list_of_reads[i][0] = '\0';
     }
@@ -259,17 +285,21 @@ int main()
 
   //define reverse complement reads
   char  list_of_reads_RC[num_of_reads][read_len + 1];
-  for (int i=0;i<num_of_reads;i++){
+  for (i=0;i<num_of_reads;i++){
       list_of_reads_RC[i][0] = '\0';
     }
   
   reversecomplement(list_of_reads, list_of_reads_RC);
 
-  /*  //find overlaps
-  find_overlaps(num_of_reads,read_length,list_of_reads,list_of_reads_RC);
-  */
-  find_overlaps_of_two_reads(list_of_reads[0],list_of_reads[1],list_of_reads_RC[1]);
-    
+  //find overlaps and save it to a list
+  int list_of_overlaps[num_of_reads*(num_of_reads-1)/2][4];
+  
+  int number_of_overlaps=find_overlaps(list_of_reads,list_of_reads_RC, list_of_overlaps);
+
+  print_overlaps(number_of_overlaps,list_of_overlaps);
+
+  cout<<number_of_overlaps;
+
   return 0;
 }
 
