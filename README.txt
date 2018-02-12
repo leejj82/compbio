@@ -30,7 +30,15 @@ C-/
 C-x u
 C-_
 
-
+mkdir leejj
+git clone https://github.com/leejj82/compbio
+cp ~/work/lab1.cpp
+git diff
+git config --global user.email "leejj82@gmail.com"
+git config --global user.name "leejj82"
+git commit -a -m "."
+git push
+git pull
 
 To view a text file in the terminal
 cat <filename>
