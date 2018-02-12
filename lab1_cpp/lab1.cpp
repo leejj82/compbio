@@ -184,33 +184,23 @@ void reversecomplement(char list[][read_len + 1], char list_rc[][read_len + 1]){
     }
  }
 
-int find_overlaps_of_two_reads(char list_original[read_len + 1], char list_compare[read_len + 1], char list_compare_rc[read_len+1],int *Forward_Backward,int *Overlap){
+int find_overlaps_of_two_reads(char list_original[read_len + 1], char list_compare[read_len + 1], char list_compare_rc[read_len+1],int *Forward_Backward,int *Overlap, int * failure_R, int * failure_L, char * right_end, char * left_end){
 
-  char right_end[41];
-  char left_end[41];
-  int  failure[40];
   int RIGHT=0;
   int LEFT=1;
   int found=0;
 
-  strncpy(right_end, list_original+read_len-40,40);
-  strncpy(left_end, list_original,40);
-  right_end[40]='\0';
-  left_end[40]='\0';
-    	
   if (found==0){ 
-    KMP_table(right_end, failure);
-    found=KMP_search(list_original, right_end, RIGHT, list_compare, failure, Overlap);
+    found=KMP_search(list_original, right_end, RIGHT, list_compare, failure_R, Overlap);
     *Forward_Backward=1;
     if (found==0){
-      found=KMP_search(list_original, right_end, RIGHT, list_compare_rc, failure, Overlap);
+      found=KMP_search(list_original, right_end, RIGHT, list_compare_rc, failure_R, Overlap);
        *Forward_Backward=0;
       if (found==0){
-	KMP_table(left_end, failure);
-	found=KMP_search(list_original, left_end, LEFT, list_compare, failure, Overlap);
+	found=KMP_search(list_original, left_end, LEFT, list_compare, failure_L, Overlap);
 	 *Forward_Backward=1;
 	if (found==0){
-	  found=KMP_search(list_original, left_end, LEFT, list_compare_rc, failure, Overlap);
+	  found=KMP_search(list_original, left_end, LEFT, list_compare_rc, failure_L, Overlap);
 	   *Forward_Backward=0;
 	}
       }
@@ -222,9 +212,25 @@ int find_overlaps_of_two_reads(char list_original[read_len + 1], char list_compa
 int find_overlaps(char list_of_reads[][read_len+1],char list_of_reads_RC[][read_len+1],int list_of_overlaps[][4]){
   int i, j ,k=0;
   int Forward_Backward[1], Overlap[1];
+
+  
+  char right_end[41];
+  char left_end[41];
+
+  int failure_R[40];
+  int failure_L[40];
+
+
   for (i=0;i<num_of_reads-1;i++){
+    strncpy(right_end, list_of_reads[i]+read_len-40,40);
+    strncpy(left_end, list_of_reads[i],40);
+    right_end[40]='\0';
+    left_end[40]='\0';
+    KMP_table(right_end, failure_R);
+    KMP_table(left_end, failure_L);    	
+
     for (j=i+1;j<num_of_reads;j++){
-      if (find_overlaps_of_two_reads(list_of_reads[i],list_of_reads[j],list_of_reads_RC[j],Forward_Backward,Overlap)==1){
+      if (find_overlaps_of_two_reads(list_of_reads[i],list_of_reads[j],list_of_reads_RC[j],Forward_Backward,Overlap,failure_R, failure_L,right_end,left_end)==1){
 	list_of_overlaps[k][0]=i;
 	list_of_overlaps[k][1]=j;
 	list_of_overlaps[k][2]=*Forward_Backward;
