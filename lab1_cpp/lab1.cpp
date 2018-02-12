@@ -100,9 +100,10 @@ int KMP_search(char *list_original, char *pat,int RIGHT_LEFT, char *list_compare
     if (matched_len==40){
       match_start=i-40;
       match_end=i-1;
-      if (check_rest(RIGHT_LEFT, match_start,match_end,list_original,list_compare)==1)
+      if (check_rest(RIGHT_LEFT, match_start,match_end,list_original,list_compare)==1){
 	*Overlap=-RIGHT_LEFT*match_start+(1-RIGHT_LEFT)*(read_len-match_end-1);
 	return 1;
+      }
     }
   }
   return 0;
@@ -191,13 +192,12 @@ int find_overlaps_of_two_reads(char list_original[read_len + 1], char list_compa
   int RIGHT=0;
   int LEFT=1;
   int found=0;
-  for (int i=0;i<read_len;i++){
-      strncpy(right_end, list_original+read_len-40,40);
-      strncpy(left_end, list_original,40);
-      right_end[40]='\0';
-      left_end[40]='\0';
-    }
 
+  strncpy(right_end, list_original+read_len-40,40);
+  strncpy(left_end, list_original,40);
+  right_end[40]='\0';
+  left_end[40]='\0';
+    	
   if (found==0){ 
     KMP_table(right_end, failure);
     found=KMP_search(list_original, right_end, RIGHT, list_compare, failure, Overlap);
@@ -298,7 +298,7 @@ int main()
 
   print_overlaps(number_of_overlaps,list_of_overlaps);
 
-  cout<<number_of_overlaps;
+  cout<<number_of_overlaps<<"\n";
 
   return 0;
 }
