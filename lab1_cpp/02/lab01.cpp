@@ -250,7 +250,7 @@ void print_overlaps(int number_of_overlaps, int list_of_overlaps[][4]){
   #if SAMPLE
   pFile = fopen ("sample.olaps","w");
   #else
-  pFile = fopen ("lab1.olaps","w");
+  pFile = fopen ("lab01.olaps","w");
   #endif
 
   for (i=0;i<number_of_overlaps;i++){
