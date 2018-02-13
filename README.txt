@@ -63,6 +63,7 @@ To clone a Git repository
 git clone https://github.com/leejj82/compbio
 
 git add <filename>
+git add -A
 git commit -m "."
 git push
 
