@@ -67,3 +67,5 @@ c++ compile
 
 >make
 >./lab1
+
+>time ./lab01 > /dev/null

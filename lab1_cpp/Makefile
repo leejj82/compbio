@@ -1,23 +1,23 @@
-all : lab1 lab1_sample lab1_debug
+all : lab01 lab01_sample lab01_debug
 
-lab1 : lab1.o
-	g++ -o lab1 lab1.o 
+lab01 : lab01.o
+	g++ -o lab01 lab01.o 
 
-lab1_sample : lab1_sample.o
-	g++ -o lab1_sample lab1_sample.o 
+lab01_sample : lab01_sample.o
+	g++ -o lab01_sample lab01_sample.o 
 
-lab1_debug : lab1_debug.o
-	g++ -o lab1_debug lab1_debug.o 
+lab01_debug : lab01_debug.o
+	g++ -o lab01_debug lab01_debug.o 
 
-lab1.o : lab1.cpp
-	g++ -c lab1.cpp
+lab01.o : lab01.cpp
+	g++ -c lab01.cpp
 
-lab1_sample.o : lab1.cpp
-	g++ -DSAMPLE -c lab1.cpp -o lab1_sample.o
+lab01_sample.o : lab01.cpp
+	g++ -DSAMPLE -c lab01.cpp -o lab01_sample.o
 
-lab1_debug.o : lab1.cpp
-	g++ -DDEBUG -c lab1.cpp -o lab1_debug.o
+lab01_debug.o : lab01.cpp
+	g++ -DDEBUG -c lab01.cpp -o lab01_debug.o
 
 clean :
-	rm lab1 lab1_sample lab1_debug lab1*.o
+	rm lab01 lab01_sample lab01_debug lab01*.o
 
