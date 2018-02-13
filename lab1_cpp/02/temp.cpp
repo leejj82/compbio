@@ -4,14 +4,13 @@
 using namespace std;
 
 int main(){
- 
-  vector<int> v;
 
-  v.reserve(10);
+  for (int i=0;i<10;i++)
+    {
+      int a[i]=i+100;
+    }
 
-  v[0]=4;
-  v.push_back(3);
-
-  cout<<v.capacity()<<"\n"<<v.size()<<"\n"<<v[0];
+  cout<<a;
+  
   return 0;
 }
