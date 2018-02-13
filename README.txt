@@ -30,6 +30,18 @@ C-/
 C-x u
 C-_
 
+To cut the text
+C-w .
+To copy the text
+M-w .
+To paste the text
+C-y .
+
+To move back to screen fg
+
+
+
+
 mkdir leejj
 git clone https://github.com/leejj82/compbio
 cp ~/work/lab1.cpp
@@ -69,3 +81,4 @@ c++ compile
 >./lab1
 
 >time ./lab01 > /dev/null
+
