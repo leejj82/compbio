@@ -1,4 +1,8 @@
-#include<bits/stdc++.h>
+//#include<bits/stdc++.h>
+#include<stdlib.h>
+#include<cstring>
+#include<algorithm>
+
 #include<iostream>
 #include<fstream>
 #include<string>

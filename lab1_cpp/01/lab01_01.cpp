@@ -302,13 +302,13 @@ int main()
   reversecomplement(list_of_reads, list_of_reads_RC);
 
   //find overlaps and save it to a list
-  int list_of_overlaps[num_of_reads*(num_of_reads-1)/2][4];
+  int list_of_olaps[num_of_reads*(num_of_reads-1)/2][4];
   
-  int number_of_overlaps=find_overlaps(list_of_reads,list_of_reads_RC, list_of_overlaps);
+  int num_of_olaps=find_overlaps(list_of_reads,list_of_reads_RC, list_of_olaps);
 
-  print_overlaps(number_of_overlaps,list_of_overlaps);
+  print_overlaps(num_of_olaps,list_of_olaps);
 
-  cout<<number_of_overlaps<<"\n";
+  cout<<num_of_olaps<<"\n";
 
   return 0;
 }
