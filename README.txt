@@ -37,6 +37,9 @@ M-w .
 To paste the text
 C-y .
 
+C-s	Search
+M-%	Replace
+
 To move back to screen fg
 
 
