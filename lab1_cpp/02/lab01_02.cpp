@@ -20,7 +20,7 @@ const int num_of_reads = 300;
 const int read_len = 500;
 #endif
 
-int read_from_olaps(int list_of_olaps[][5], int location[num_of_reads], vector<vector<int> >  &list_of_exact_olaps){
+int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads], vector<vector<int> >  &list_of_exact_olaps){
 
   char str0[5],str1[5],str2[5],str3[5];
    int num_of_olaps=0;
@@ -37,6 +37,7 @@ int read_from_olaps(int list_of_olaps[][5], int location[num_of_reads], vector<v
   if (infile.is_open()) {
     while (infile >> str0>>str1>>str2>>str3){
       temp0=atoi(str3);
+      
       if(temp0==0){
 	if (str2[0]=='F')
 	  FB=1;
@@ -60,9 +61,14 @@ int read_from_olaps(int list_of_olaps[][5], int location[num_of_reads], vector<v
 	else
 	  list_of_olaps[num_of_olaps][2]=0;
 
-	list_of_olaps[num_of_olaps][3]=atoi(str3);
+	temp=atoi(str3);
+	list_of_olaps[num_of_olaps][3]=temp;
+	if (temp >0)
+	  list_of_olaps[num_of_olaps][5]=1;
+	else
+	  list_of_olaps[num_of_olaps][5]=0;
 	list_of_olaps[num_of_olaps][4]=0;
-
+	
 	num_of_olaps++;
       }
       
@@ -79,13 +85,7 @@ int read_from_olaps(int list_of_olaps[][5], int location[num_of_reads], vector<v
   return num_of_olaps;
 }
 
-int to_delete(int i, int j, int k, int l, int list_of_olaps[][5]){
-
-  
-  return -1;
-}
-
-void delete_edges(int list_of_olaps[][5],int num_of_olaps, int location[num_of_reads]){
+void delete_edges(int list_of_olaps[][6],int num_of_olaps, int location[num_of_reads]){
 
   /*i the number of read1, j the location of read1, read2 pair, k the location of read1, read2 pair, l, the number of
 		read2, read2 pair*/
@@ -99,12 +99,17 @@ void delete_edges(int list_of_olaps[][5],int num_of_olaps, int location[num_of_r
       for (k=j+1;k<location[i+1];k++){
 	for (l=location[list_of_olaps[j][1]];l<location[list_of_olaps[j][1]+1];l++){
 	  if(list_of_olaps[l][1]==list_of_olaps[k][1]){
-	    todelete=to_delete(i,j,k,l,list_of_olaps);
-	    list_of_olaps[todelete][4]=1;
+	    if((list_of_olaps[j][2]+list_of_olaps[k][2]+list_of_olaps[l][2])%2==0){
+	      
+	      list_of_olaps[j][5]+list_of_olaps[k][5]+list_of_olaps[l][5];
+	      if(){	
+		todelete=
+		list_of_olaps[todelete][4]=1;
+	      }
+	    }
 	  }
 	  else if (list_of_olaps[l][1]>list_of_olaps[k][1])
 	    break;
-	  i, list_of_olaps[j][1] list_of_olaps[k][1] list_of_olaps[l][0] list_of_olaps[1]
 	}
       }
     }
@@ -113,7 +118,7 @@ void delete_edges(int list_of_olaps[][5],int num_of_olaps, int location[num_of_r
 
 int main(){
 
-  int list_of_olaps[num_of_reads*(num_of_reads-1)/2][5];//read1,read2,F/R,length,deleted
+  int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R,length,deleted,direction of arrow
 
   vector<vector<int> > list_of_exact_olaps(0, vector<int>(3));//save exact overlaps
   
