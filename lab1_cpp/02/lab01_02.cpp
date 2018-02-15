@@ -7,6 +7,8 @@
 #include<fstream>
 #include<string>
 #include<vector>
+#include <iomanip>
+#include <assert.h>
 
 using namespace std;
 
@@ -178,9 +180,9 @@ int main(){
   int num_of_edges_for_unitigs=num_of_olaps-num_of_edges_to_delete;
 
   vector<vector<vector<int> > > edges_for_nodes(num_of_reads);
+  edges_for_nodes.clear();
   
   find_unitigs(location, num_of_olaps,list_of_olaps,edges_for_nodes);
-
   cout<<num_of_edges_to_delete<<" "<<num_of_edges_for_unitigs<<" ";
 
   cout<<list_of_exact_olaps.size()<<" ";
@@ -191,15 +193,17 @@ int main(){
     }
   }
 
+  // cout << setw(10) << 77 << endl;
 
   int i,j,k;
 
   FILE * pFile;
-  pFile = fopen ("lab01.list_edges","w");
-
-  for (i=0;i<num_of_reads;i++){
-    for (j=0;j<2;j++){
-      cout<<edges_for_nodes[i][j].size()<<"\n";
+  pFile = fopen("lab01.list_edges", "w");
+  assert(edges_for_nodes.size() == num_of_reads);  
+  for(i=0; i < edges_for_nodes.size(); i++) {
+    assert(edges_for_nodes[i].size() == 2);
+    for(j=0; j < edges_for_nodes[i].size(); j++) {
+      // cout<< edges_for_nodes[i][j].size() <<"\n";
       /*      for (k=0;k<edges_for_nodes[i][j].size();k++){
 	      fprintf (pFile, "%d\n",edges_for_nodes[i][j][k]);
       }*/
