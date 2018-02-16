@@ -7,6 +7,7 @@
 #include<fstream>
 #include<string>
 #include<vector>
+#include<list>
 
 using namespace std;
 
@@ -20,13 +21,13 @@ const int num_of_reads = 300;
 const int read_len = 500;
 #endif
 
-int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads], vector<vector<int> >  &list_of_exact_olaps, int &num_of_exact_olaps){
+int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads], vector<vector<int> >  &list_of_exact_olaps, int &num_of_exact_olaps,int &num_of_edges_to_delete){
 
   char str0[5],str1[5],str2[5],str3[5];
-   int num_of_olaps=0;
-   int temp0,temp,FB;
-   vector<int> temp1(3);
-   location[0]=0;
+  int i,j,temp0,temp,FB,num_of_olaps=0;
+  vector<int> temp1(3);
+
+  location[0]=0;
 
 #if SAMPLE
   ifstream infile("sample.olaps");
@@ -76,16 +77,26 @@ int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads], vector<v
   }
   infile.close();
  
-  for (int i=1;i<num_of_reads;i++){
+  for (i=1;i<num_of_reads;i++){
     if (location[i]==0)
       location[i]=location[i-1];
     else location[i]+=1;
   }
+
+  for (i=0;i<num_of_exact_olaps;i++){
+    for (j=0;j<num_of_olaps;j++){
+      if(list_of_exact_olaps[i][1]==list_of_olaps[j][0] || list_of_exact_olaps[i][1]==list_of_olaps[j][1]){
+	list_of_olaps[j][5]=1;
+	num_of_edges_to_delete++;
+      }
+    }
+  }
+
   
   return num_of_olaps;
 }
 
-int record_edge_to_delete(int list_of_olaps[][6],int num_of_olaps, int location[num_of_reads]){
+void record_edge_to_delete(int list_of_olaps[][6],int num_of_olaps, int location[num_of_reads],int &num_of_edges_to_delete){
 
   /*i the number of read1, j the location of read1, read2 pair, k the location of read1, read2 pair, l, the number of
 		read2, read2 pair*/
@@ -93,8 +104,7 @@ int record_edge_to_delete(int list_of_olaps[][6],int num_of_olaps, int location[
   int i,j,k,l;
   int deleted=1;
   int arrow0,arrow1,arrow2;
-  int count=0;
-  
+   
   for (i=0;i<num_of_reads-2;i++){
     for (j=location[i];j<location[i+1]-1;j++){
       for (k=j+1;k<location[i+1];k++){
@@ -107,17 +117,17 @@ int record_edge_to_delete(int list_of_olaps[][6],int num_of_olaps, int location[
 	      if (list_of_olaps[j][2]==0)
 		arrow2=1-arrow2;
 	      if (arrow0==arrow1 && arrow1==arrow2 && list_of_olaps[k][5]==0){
-		list_of_olaps[k][5]=1;
-		count++;
+		list_of_olaps[k][5]=deleted;
+		num_of_edges_to_delete++;
 	      }
 	      else if (arrow0==arrow1 && arrow0!=arrow2 && list_of_olaps[j][5]==0){
-		list_of_olaps[j][5]=1;
-		count++;
+		list_of_olaps[j][5]=deleted;
+		num_of_edges_to_delete++;
 	      }
 	      else if (arrow0!=arrow1 && arrow1==arrow2 && list_of_olaps[l][5]==0){
-		list_of_olaps[l][5]=1;
-		count++;
-	      }
+		list_of_olaps[l][5]=deleted;
+		num_of_edges_to_delete++;
+      	      }
 	    }
 	  }
 	  else if (list_of_olaps[l][1]>list_of_olaps[k][1])
@@ -126,37 +136,133 @@ int record_edge_to_delete(int list_of_olaps[][6],int num_of_olaps, int location[
       }
     }
   }
-  return count;
 }
 
-void find_unitigs(int location[num_of_reads],int num_of_olaps,int list_of_olaps[][6],vector<vector<vector<int> > > &edges_for_nodes){
+void set_up_viable_edges(int location[num_of_reads], int list_of_olaps[][6], vector<vector<vector<int> > > &edges_for_nodes,int edges_for_nodes_index[][4],  vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
 
-  int i,j=0,k;
-  int count[2];
-  vector<int> temp(2);
-  vector<vector<int> > temp_node(2,vector<int>(0));
+  int i,j;
   
   for (i=0;i<num_of_reads;i++){
-    count[0]=0;
-    count[1]=0;
     for (j=location[i];j<location[i+1];j++){
       if (list_of_olaps[j][5]==0){
 	if (list_of_olaps[j][4]==1){
-     	  temp_node[0].push_back(list_of_olaps[j][0]);
-	  temp_node[0].push_back(list_of_olaps[j][1]);	  
-	  count[0]++;
+	  edges_for_nodes[i][0].push_back(list_of_olaps[j][1]);
+	  edges_for_nodes[i][0].push_back(list_of_olaps[j][2]);
+	  edges_for_nodes[i][0].push_back(list_of_olaps[j][3]);
+	  edges_for_nodes[i][0].push_back(0);
+	  edges_for_nodes_index[i][0]+=1;
+	  edges_for_nodes_index[i][1]+=1;
+
+	  if (list_of_olaps[j][2]==1){
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][2]);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(-list_of_olaps[j][3]);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(0);
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][2]+=1;
+	  }
+	  else{
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][2]);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][3]);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(0);
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][1]+=1;
+	    
+	  }
 	}
 	else {
-     	  temp_node[1].push_back(list_of_olaps[j][0]);
-	  temp_node[1].push_back(list_of_olaps[j][1]);	  
-	  count[1]++;
+	  edges_for_nodes[i][1].push_back(list_of_olaps[j][1]);
+	  edges_for_nodes[i][1].push_back(list_of_olaps[j][2]);
+	  edges_for_nodes[i][1].push_back(list_of_olaps[j][3]);
+	  edges_for_nodes[i][1].push_back(0);
+	  edges_for_nodes_index[i][0]+=1;
+	  edges_for_nodes_index[i][2]+=1;
+	  
+
+	  if (list_of_olaps[j][2]==1){
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][2]);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(-list_of_olaps[j][3]);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(0);
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][1]+=1;
+	  }
+	  else{
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][2]);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][3]);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(0);
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][2]+=1;
+	  }
 	}
       }
     }
-    edges_for_nodes.push_back(temp_node);
-    temp_node[0].resize(0);
-    temp_node[1].resize(0);
   }
+
+  for (i=0;i<num_of_exact_olaps;i++){
+    edges_for_nodes_index[list_of_exact_olaps[i][1]][3]+=1;
+    cout<<list_of_exact_olaps[i][1];
+  }
+}
+
+/*
+void find_a_unitig(vector<list<vector<int> > > &unitigs, int u_count, vector<vector<vector<int> > > &edges_for_nodes, int &index,int edges_for_nodes_index[][4]){
+
+  int i;
+  for (i=index;i<num_of_reads;i++){
+    if (edges_for_nodes_index[i][3]==0){//not used
+      if (edges_for_nodes_index[i][1]==1){
+	unitigs[u_count].push_back(edges_for_nodes[i][0]);
+      }
+      if (edges_for_nodes_index[i][2]==1 {
+	
+	}
+
+	
+
+	}
+    }
+  } 
+}
+*/
+
+
+void find_unitigs(vector<list<vector<int> > > &unitigs, vector<vector<vector<int> > > &edges_for_nodes, int edges_for_nodes_index[][4]){
+  /*
+  int i,u_count=0, index=0;
+  int front=0, back=1
+  while(index<num_of_reads){
+    for (i=index;i<num_of_reads;i++){
+      if (edges_for_nodes_index[i][3]==0){//not used
+	
+	list<vector<int> > temp;
+	unitigs.push_back(temp);
+
+	if (edges_for_nodes_index[i][1]==1 && edges_for_nodes_index[i][2]==1){
+	  insert_unitig(front, unitigs, u_count, edges_for_nodes[i][1]);
+	  insert_unitig(back, unitigs, u_count, edges_for_nodes[i][0]);
+	  
+	  unitigs[u_count].push_front(edges_for_nodes[i][1]);
+	  unitigs[u_count].push_back(edges_for_nodes[i][0]);
+	 
+	  //	  find_a_unitig(unitigs,u_count,edges_for_nodes,index, edges_for_nodes_index);
+	}
+	else{
+	  if (edges_for_nodes_index[i][1]==1){
+
+	  }
+	  else if (edges_for_nodes_index[i][2]==1){
+
+	  }
+	  else {
+
+	  }
+	}
+      }
+    }
+  }*/
 }   
 
 
@@ -168,21 +274,34 @@ int main(){
 
   vector<vector<int> > list_of_exact_olaps;//save exact overlaps
   int num_of_exact_olaps=0;
-  
+  int num_of_edges_to_delete=0;
   int location[num_of_reads];//starting point of the read 1 in the list_of_olaps
 
-  int num_of_olaps=read_from_olaps(list_of_olaps,location,list_of_exact_olaps,num_of_exact_olaps);
+  int num_of_olaps=read_from_olaps(list_of_olaps,location,list_of_exact_olaps,num_of_exact_olaps,num_of_edges_to_delete);
 
-  int num_of_edges_to_delete= record_edge_to_delete(list_of_olaps,num_of_olaps,location);
+  record_edge_to_delete(list_of_olaps,num_of_olaps,location, num_of_edges_to_delete);
 
   int num_of_edges_for_unitigs=num_of_olaps-num_of_edges_to_delete;
 
-  vector<vector<vector<int> > > edges_for_nodes(num_of_reads);
+  vector<vector<vector<int> > > edges_for_nodes(num_of_reads, vector<vector<int> >(2));//for each node, save outgoing edges, incoming edges
+
+  int edges_for_nodes_index[num_of_reads][4]={{0}}; //save #of total edges, # of outgoing edges,  # of incoming edges, #used or not
   
-  find_unitigs(location, num_of_olaps,list_of_olaps,edges_for_nodes);
+  set_up_viable_edges(location, list_of_olaps, edges_for_nodes,edges_for_nodes_index, list_of_exact_olaps, num_of_exact_olaps);
+
+  vector<list<vector<int> > > unitigs;
+
+  find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_index);
+
+
+
+
+
+
+
+  
 
   cout<<num_of_edges_to_delete<<" "<<num_of_edges_for_unitigs<<" ";
-
   cout<<list_of_exact_olaps.size()<<" ";
   for (int i=0;i<list_of_exact_olaps.size();i++){
     cout<<list_of_exact_olaps[i].size()<<" ";
@@ -190,7 +309,7 @@ int main(){
       cout<<list_of_exact_olaps[i][j]<<" ";
     }
   }
-
+  cout<<endl;
 
   int i,j,k;
 
@@ -199,10 +318,18 @@ int main(){
 
   for (i=0;i<num_of_reads;i++){
     for (j=0;j<2;j++){
-      cout<<edges_for_nodes[i][j].size()<<"\n";
-      /*      for (k=0;k<edges_for_nodes[i][j].size();k++){
-	      fprintf (pFile, "%d\n",edges_for_nodes[i][j][k]);
-      }*/
+      fprintf (pFile, "%d  ",i);
+	  
+      fprintf (pFile, "%d  ",edges_for_nodes_index[i][0]);
+      fprintf (pFile, "%d  ",edges_for_nodes_index[i][j+1]);
+      fprintf (pFile, "%d  ",edges_for_nodes_index[i][3]);
+      
+      
+      for (k=0;k<edges_for_nodes[i][j].size();k++){
+	fprintf (pFile, "%d  ",edges_for_nodes[i][j][k]);
+      }
+
+      fprintf (pFile, "\n");
     }
   }
  
