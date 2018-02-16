@@ -7,7 +7,12 @@
 #include<fstream>
 #include<string>
 #include<vector>
+<<<<<<< HEAD
 #include<list>
+=======
+#include <iomanip>
+#include <assert.h>
+>>>>>>> 6a9ac841bfa03422c51d928f501cc7e70a5c1dd2
 
 using namespace std;
 
@@ -283,6 +288,7 @@ int main(){
 
   int num_of_edges_for_unitigs=num_of_olaps-num_of_edges_to_delete;
 
+<<<<<<< HEAD
   vector<vector<vector<int> > > edges_for_nodes(num_of_reads, vector<vector<int> >(2));//for each node, save outgoing edges, incoming edges
 
   int edges_for_nodes_index[num_of_reads][4]={{0}}; //save #of total edges, # of outgoing edges,  # of incoming edges, #used or not
@@ -292,6 +298,13 @@ int main(){
   vector<list<vector<int> > > unitigs;
 
   find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_index);
+=======
+  vector<vector<vector<int> > > edges_for_nodes(num_of_reads);
+  edges_for_nodes.clear();
+  
+  find_unitigs(location, num_of_olaps,list_of_olaps,edges_for_nodes);
+  cout<<num_of_edges_to_delete<<" "<<num_of_edges_for_unitigs<<" ";
+>>>>>>> 6a9ac841bfa03422c51d928f501cc7e70a5c1dd2
 
 
 
@@ -309,11 +322,17 @@ int main(){
       cout<<list_of_exact_olaps[i][j]<<" ";
     }
   }
+<<<<<<< HEAD
   cout<<endl;
+=======
+
+  // cout << setw(10) << 77 << endl;
+>>>>>>> 6a9ac841bfa03422c51d928f501cc7e70a5c1dd2
 
   int i,j,k;
 
   FILE * pFile;
+<<<<<<< HEAD
   pFile = fopen ("lab01.list_edges","w");
 
   for (i=0;i<num_of_reads;i++){
@@ -330,6 +349,17 @@ int main(){
       }
 
       fprintf (pFile, "\n");
+=======
+  pFile = fopen("lab01.list_edges", "w");
+  assert(edges_for_nodes.size() == num_of_reads);  
+  for(i=0; i < edges_for_nodes.size(); i++) {
+    assert(edges_for_nodes[i].size() == 2);
+    for(j=0; j < edges_for_nodes[i].size(); j++) {
+      // cout<< edges_for_nodes[i][j].size() <<"\n";
+      /*      for (k=0;k<edges_for_nodes[i][j].size();k++){
+	      fprintf (pFile, "%d\n",edges_for_nodes[i][j][k]);
+      }*/
+>>>>>>> 6a9ac841bfa03422c51d928f501cc7e70a5c1dd2
     }
   }
  
