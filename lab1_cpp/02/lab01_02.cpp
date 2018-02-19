@@ -216,10 +216,9 @@ void set_up_viable_edges(int location[num_of_reads], int list_of_olaps[][6], vec
   }
 }
 
-/*
-void find_a_unitig(int &starting_point, vector<vector<vector<vector<int> > > > &unitigs, vector<vector<vector<int> > > &edges_for_nodes, int edges_for_nodes_index[][4] vector<vector<vector<int> > > &unitig_front, vector<vector<vector<int> > > &unitig_back){
-  
-  int used=1;
+
+void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, int edges_for_nodes_index[][4], vector<vector<vector<int> > > &unitig){
+
   
     
   
@@ -228,19 +227,16 @@ void find_a_unitig(int &starting_point, vector<vector<vector<vector<int> > > > &
 int find_unitigs(vector<vector<vector<vector<int> > > >  &unitigs, vector<vector<vector<int> > > &edges_for_nodes, int edges_for_nodes_index[][4]){
   
   int not_used=0,used=1;
+  int front=1,back=0;
   
   for(int starting_point=0;starting_point<num_of_reads;starting_point++){
     if (edges_for_nodes_index[starting_point][3]==not_used){//node not used
-      vector<vector<vector<int> > > unitig_front, unitig_back;
-      edges_for_nodes_index[starting_point][3]=used;
-      find_a_unitig(starting_point,unitigs,edges_for_nodes,edges_for_nodes_index, unitig_front, unitig_back); 
-      find_a_unitig(starting_point,unitigs,edges_for_nodes,edges_for_nodes_index, unitig_front, unitig_back);  
+      vector<vector<vector<int> > > unitig_front;
+      find_a_unitig(starting_point,edges_for_nodes,edges_for_nodes_index, unitig_front); 
+      find_a_unitig(starting_point,edges_for_nodes,edges_for_nodes_index, unitig_back);  
     }
   }
 }   
-
-
-*/
 
 int main(){
 
