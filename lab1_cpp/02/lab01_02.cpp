@@ -7,12 +7,7 @@
 #include<fstream>
 #include<string>
 #include<vector>
-<<<<<<< HEAD
 #include<list>
-=======
-#include <iomanip>
-#include <assert.h>
->>>>>>> 6a9ac841bfa03422c51d928f501cc7e70a5c1dd2
 
 using namespace std;
 
@@ -147,59 +142,69 @@ void set_up_viable_edges(int location[num_of_reads], int list_of_olaps[][6], vec
 
   int i,j;
   
-  for (i=0;i<num_of_reads;i++){
+  for (i=0;i<num_of_reads;i++){//read1,read2,F/R(1/0),olap_length,location,deleted
     for (j=location[i];j<location[i+1];j++){
-      if (list_of_olaps[j][5]==0){
-	if (list_of_olaps[j][4]==1){
-	  edges_for_nodes[i][0].push_back(list_of_olaps[j][1]);
-	  edges_for_nodes[i][0].push_back(list_of_olaps[j][2]);
-	  edges_for_nodes[i][0].push_back(list_of_olaps[j][3]);
-	  edges_for_nodes[i][0].push_back(0);
-	  edges_for_nodes_index[i][0]+=1;
-	  edges_for_nodes_index[i][1]+=1;
-
-	  if (list_of_olaps[j][2]==1){
-	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(i);
-	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][2]);
-	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(-list_of_olaps[j][3]);
-	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(0);
-	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
-	    edges_for_nodes_index[list_of_olaps[j][1]][2]+=1;
-	  }
-	  else{
-	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(i);
-	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][2]);
-	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][3]);
-	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(0);
-	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
-	    edges_for_nodes_index[list_of_olaps[j][1]][1]+=1;
-	    
-	  }
-	}
-	else {
+      if (list_of_olaps[j][5]==0){ //not deleted
+	if (list_of_olaps[j][4]==1){ //location of first read front
+	  edges_for_nodes[i][1].push_back(i);
+	  edges_for_nodes[i][1].push_back(1);
 	  edges_for_nodes[i][1].push_back(list_of_olaps[j][1]);
 	  edges_for_nodes[i][1].push_back(list_of_olaps[j][2]);
 	  edges_for_nodes[i][1].push_back(list_of_olaps[j][3]);
-	  edges_for_nodes[i][1].push_back(0);
+	
 	  edges_for_nodes_index[i][0]+=1;
 	  edges_for_nodes_index[i][2]+=1;
-	  
 
-	  if (list_of_olaps[j][2]==1){
+	  if (list_of_olaps[j][2]==1){//forward
 	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(i);
-	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][2]);
-	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(-list_of_olaps[j][3]);
-	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(0);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(1);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][1]);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(1);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][3]);
+	    
 	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
 	    edges_for_nodes_index[list_of_olaps[j][1]][1]+=1;
 	  }
-	  else{
-	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(i);
-	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][2]);
-	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][3]);
+	  else{//reverse complement
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][1]);
+     	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(1);
+     	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(i);
 	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(0);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][3]);
+	    
 	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
 	    edges_for_nodes_index[list_of_olaps[j][1]][2]+=1;
+	  }
+	}
+	else { //location of first read back
+	  edges_for_nodes[i][0].push_back(list_of_olaps[j][1]);
+	  edges_for_nodes[i][0].push_back(list_of_olaps[j][2]);
+	  edges_for_nodes[i][0].push_back(i);
+	  edges_for_nodes[i][0].push_back(1);
+	  edges_for_nodes[i][0].push_back(-list_of_olaps[j][3]);
+	
+	  edges_for_nodes_index[i][0]+=1;
+	  edges_for_nodes_index[i][1]+=1;
+
+	  if (list_of_olaps[j][2]==1){//forward
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][1]);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(1);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(1);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(-list_of_olaps[j][3]);
+	    
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][2]+=1;
+	  }
+	  else{//reverse complement
+  	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(0);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][1]);
+     	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(1);
+   	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(-list_of_olaps[j][3]);
+	    
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][1]+=1;
 	  }
 	}
       }
@@ -208,74 +213,38 @@ void set_up_viable_edges(int location[num_of_reads], int list_of_olaps[][6], vec
 
   for (i=0;i<num_of_exact_olaps;i++){
     edges_for_nodes_index[list_of_exact_olaps[i][1]][3]+=1;
-    cout<<list_of_exact_olaps[i][1];
   }
 }
 
 /*
-void find_a_unitig(vector<list<vector<int> > > &unitigs, int u_count, vector<vector<vector<int> > > &edges_for_nodes, int &index,int edges_for_nodes_index[][4]){
-
-  int i;
-  for (i=index;i<num_of_reads;i++){
-    if (edges_for_nodes_index[i][3]==0){//not used
-      if (edges_for_nodes_index[i][1]==1){
-	unitigs[u_count].push_back(edges_for_nodes[i][0]);
-      }
-      if (edges_for_nodes_index[i][2]==1 {
-	
-	}
-
-	
-
-	}
-    }
-  } 
+void find_a_unitig(int &starting_point, vector<vector<vector<vector<int> > > > &unitigs, vector<vector<vector<int> > > &edges_for_nodes, int edges_for_nodes_index[][4] vector<vector<vector<int> > > &unitig_front, vector<vector<vector<int> > > &unitig_back){
+  
+  int used=1;
+  
+    
+  
 }
-*/
 
-
-void find_unitigs(vector<list<vector<int> > > &unitigs, vector<vector<vector<int> > > &edges_for_nodes, int edges_for_nodes_index[][4]){
-  /*
-  int i,u_count=0, index=0;
-  int front=0, back=1
-  while(index<num_of_reads){
-    for (i=index;i<num_of_reads;i++){
-      if (edges_for_nodes_index[i][3]==0){//not used
-	
-	list<vector<int> > temp;
-	unitigs.push_back(temp);
-
-	if (edges_for_nodes_index[i][1]==1 && edges_for_nodes_index[i][2]==1){
-	  insert_unitig(front, unitigs, u_count, edges_for_nodes[i][1]);
-	  insert_unitig(back, unitigs, u_count, edges_for_nodes[i][0]);
-	  
-	  unitigs[u_count].push_front(edges_for_nodes[i][1]);
-	  unitigs[u_count].push_back(edges_for_nodes[i][0]);
-	 
-	  //	  find_a_unitig(unitigs,u_count,edges_for_nodes,index, edges_for_nodes_index);
-	}
-	else{
-	  if (edges_for_nodes_index[i][1]==1){
-
-	  }
-	  else if (edges_for_nodes_index[i][2]==1){
-
-	  }
-	  else {
-
-	  }
-	}
-      }
+int find_unitigs(vector<vector<vector<vector<int> > > >  &unitigs, vector<vector<vector<int> > > &edges_for_nodes, int edges_for_nodes_index[][4]){
+  
+  int not_used=0,used=1;
+  
+  for(int starting_point=0;starting_point<num_of_reads;starting_point++){
+    if (edges_for_nodes_index[starting_point][3]==not_used){//node not used
+      vector<vector<vector<int> > > unitig_front, unitig_back;
+      edges_for_nodes_index[starting_point][3]=used;
+      find_a_unitig(starting_point,unitigs,edges_for_nodes,edges_for_nodes_index, unitig_front, unitig_back); 
+      find_a_unitig(starting_point,unitigs,edges_for_nodes,edges_for_nodes_index, unitig_front, unitig_back);  
     }
-  }*/
+  }
 }   
 
 
-
+*/
 
 int main(){
 
-  int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,deleted,direction of arrow
+  int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
 
   vector<vector<int> > list_of_exact_olaps;//save exact overlaps
   int num_of_exact_olaps=0;
@@ -288,23 +257,15 @@ int main(){
 
   int num_of_edges_for_unitigs=num_of_olaps-num_of_edges_to_delete;
 
-<<<<<<< HEAD
   vector<vector<vector<int> > > edges_for_nodes(num_of_reads, vector<vector<int> >(2));//for each node, save outgoing edges, incoming edges
 
   int edges_for_nodes_index[num_of_reads][4]={{0}}; //save #of total edges, # of outgoing edges,  # of incoming edges, #used or not
   
   set_up_viable_edges(location, list_of_olaps, edges_for_nodes,edges_for_nodes_index, list_of_exact_olaps, num_of_exact_olaps);
 
-  vector<list<vector<int> > > unitigs;
+  vector<vector<vector<vector<int> > > > unitigs;
 
-  find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_index);
-=======
-  vector<vector<vector<int> > > edges_for_nodes(num_of_reads);
-  edges_for_nodes.clear();
-  
-  find_unitigs(location, num_of_olaps,list_of_olaps,edges_for_nodes);
-  cout<<num_of_edges_to_delete<<" "<<num_of_edges_for_unitigs<<" ";
->>>>>>> 6a9ac841bfa03422c51d928f501cc7e70a5c1dd2
+  //  find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_index);
 
 
 
@@ -322,17 +283,11 @@ int main(){
       cout<<list_of_exact_olaps[i][j]<<" ";
     }
   }
-<<<<<<< HEAD
   cout<<endl;
-=======
-
-  // cout << setw(10) << 77 << endl;
->>>>>>> 6a9ac841bfa03422c51d928f501cc7e70a5c1dd2
 
   int i,j,k;
 
   FILE * pFile;
-<<<<<<< HEAD
   pFile = fopen ("lab01.list_edges","w");
 
   for (i=0;i<num_of_reads;i++){
@@ -349,21 +304,19 @@ int main(){
       }
 
       fprintf (pFile, "\n");
-=======
-  pFile = fopen("lab01.list_edges", "w");
-  assert(edges_for_nodes.size() == num_of_reads);  
-  for(i=0; i < edges_for_nodes.size(); i++) {
-    assert(edges_for_nodes[i].size() == 2);
-    for(j=0; j < edges_for_nodes[i].size(); j++) {
-      // cout<< edges_for_nodes[i][j].size() <<"\n";
-      /*      for (k=0;k<edges_for_nodes[i][j].size();k++){
-	      fprintf (pFile, "%d\n",edges_for_nodes[i][j][k]);
-      }*/
->>>>>>> 6a9ac841bfa03422c51d928f501cc7e70a5c1dd2
     }
   }
- 
+   fclose (pFile);
 
+   
+  pFile = fopen ("lab01.list_of_olaps","w");
+
+  for (i=0;i<num_of_olaps;i++){
+    for (j=0;j<6;j++){
+      fprintf (pFile, "%d  ",list_of_olaps[i][j]);
+    }
+      fprintf (pFile, "\n");
+  }
   fclose (pFile);
   
   return 0;
