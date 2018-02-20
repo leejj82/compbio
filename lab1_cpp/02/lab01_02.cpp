@@ -243,7 +243,8 @@ void previous_read(int starting_point, int FB,  vector<vector<vector<int> > > &e
   int i,used=1;
   int Forward=1, RC=0;
   int previous_node;
-
+  vector<int> null_vector(5);
+  
   if (FB==Forward){ //current node is in the forward order
     if (edges_for_nodes_index[starting_point][1]>=1){  
 
@@ -269,6 +270,9 @@ void previous_read(int starting_point, int FB,  vector<vector<vector<int> > > &e
 	  }
 	}
       }
+    }
+    else { //there is no edge to the previous node
+      unitig_front.push_back(null_vector);
     }
   }
   else{ //current node is in the reverse complement order
@@ -298,6 +302,9 @@ void previous_read(int starting_point, int FB,  vector<vector<vector<int> > > &e
 	}
       }
     }
+    else { //there is no edge to the next node
+      unitig_front.push_back(null_vector);
+    }
   }
 }
 
@@ -306,7 +313,8 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
   int i,used=1;
   int Forward=1, RC=0;
   int next_node;
-
+  vector<int> null_vector(5);
+  
   if (FB==Forward){ //current node is in the forward order
     if (edges_for_nodes_index[starting_point][2]>=1){//next node
 
@@ -332,7 +340,10 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
 	  }
 	}
       }
-    } 
+    }
+    else { //there is no edge to the previous node
+      unitig_back.push_back(null_vector);
+    }
   }
   else{ //current node is in the reverse complement order
     if (edges_for_nodes_index[starting_point][1]>=1){//next node
@@ -360,6 +371,9 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
 	}
       }
     }
+    else { //there is no edge to the next node
+      unitig_back.push_back(null_vector);
+    }
   }
 }
 
@@ -371,11 +385,11 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
   vector<vector<int> > unitig_back;
   int Forward=1, RC=0;
   int previous_node, next_node;
+  vector<int> null_vector(5);
 
-
-  if (edges_for_nodes_index[starting_point][0]>0){
+  if (edges_for_nodes_index[starting_point][0]>0){ //there exists at least one edge connected to the node
   
-    if (edges_for_nodes_index[starting_point][1]>=1){  //previous node
+    if (edges_for_nodes_index[starting_point][1]>=1){  //previous nod
 
       unitig_front.push_back(edges_for_nodes[starting_point][0]);
 
@@ -399,6 +413,9 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
 	  }
 	}
       }
+    }
+    else { //there is no edge to the previous node
+      unitig_front.push_back(null_vector);
     }
 
     if (edges_for_nodes_index[starting_point][2]>=1){//next node
@@ -425,6 +442,9 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
 	  }
 	}
       }
+    }
+    else { //there is no edge to the next node
+      unitig_back.push_back(null_vector);
     }
 
     reverse(unitig_front.begin(),unitig_front.end());
@@ -559,7 +579,7 @@ int main(){
   find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index);
   print_unis(unitigs, list_of_exact_olaps, num_of_exact_olaps);
   
-  /*
+  
   int i,j,k;
 
   FILE * pFile;
@@ -615,7 +635,6 @@ int main(){
       fprintf (pFile, "\n\n");
   }
   fclose (pFile);
-*/
   
   return 0;
 }
