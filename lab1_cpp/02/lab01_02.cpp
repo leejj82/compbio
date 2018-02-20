@@ -427,6 +427,18 @@ int main(){
       fprintf (pFile, "\n");
   }
   fclose (pFile);
+
+  pFile = fopen ("lab01.unitigs","w");
+
+  for (i=0;i<unitigs.size();i++){
+    for (j=0;j<unitigs[i].size();j++){
+      for (k=0;k<unitigs[i][j].size();k++){
+	fprintf (pFile, "%d  ",unitigs[i][j][k]);
+      }
+      fprintf (pFile, "\n");
+    }
+  }
+  fclose (pFile);
   
   return 0;
 }
