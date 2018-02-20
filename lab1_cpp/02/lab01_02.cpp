@@ -238,29 +238,13 @@ void set_up_edges_RC(vector<vector<vector<int> > > &edges_for_nodes, vector<vect
 }
 
 
-void previous_read(int previous_node, int FB,  vector<vector<vector<int> > > &edges_for_nodes,  vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &unitig_front){
-
-  
-}
-
-void next_read(int next_node, int FB,  vector<vector<vector<int> > > &edges_for_nodes,  vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &unitig_back){
-
-  
-}
-
-
-
-void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs){
+void previous_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges_for_nodes,  vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &unitig_front){
 
   int i,used=1;
-  vector<vector<int> > unitig_front;
-  vector<vector<int> > unitig_back;
   int Forward=1, RC=0;
-  int previous_node, next_node;
+  int previous_node;
 
-
-  if (edges_for_nodes_index[starting_point][0]>0){
-  
+  if (FB==Forward){ //current node is in the forward order
     if (edges_for_nodes_index[starting_point][1]>=1){  
 
       unitig_front.push_back(edges_for_nodes[starting_point][0]);
@@ -286,8 +270,83 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
 	}
       }
     }
+  }
+  else{ //current node is in the reverse complement order
+    
+    if (edges_for_nodes_index[starting_point][2]>=1){  
 
-    if (edges_for_nodes_index[starting_point][2]>=1){
+      unitig_front.push_back(edges_for_nodes_RC[starting_point][0]);
+
+      if (edges_for_nodes_index[starting_point][2]==1){//there is exactly one edge connecting with previous node
+	if (edges_for_nodes_RC[starting_point][0][1]==Forward){//the previous node is in the forward order
+
+	  previous_node=edges_for_nodes_RC[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][2]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }      
+	}
+	else{//the previous node is in the reverse complement order
+      
+	  previous_node=edges_for_nodes_RC[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][1]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }
+	}
+      }
+    }
+  }
+}
+
+void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges_for_nodes,  vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &unitig_back){
+
+  
+  
+}
+
+
+
+void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs){
+
+  int i,used=1;
+  vector<vector<int> > unitig_front;
+  vector<vector<int> > unitig_back;
+  int Forward=1, RC=0;
+  int previous_node, next_node;
+
+
+  if (edges_for_nodes_index[starting_point][0]>0){
+  
+    if (edges_for_nodes_index[starting_point][1]>=1){  //previous node
+
+      unitig_front.push_back(edges_for_nodes[starting_point][0]);
+
+      if (edges_for_nodes_index[starting_point][1]==1){//there is exactly one edge connecting with previous node
+	if (edges_for_nodes[starting_point][0][1]==Forward){//the previous node is in the forward order
+
+	  previous_node=edges_for_nodes[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][2]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }      
+	}
+	else{//the previous node is in the reverse complement order
+      
+	  previous_node=edges_for_nodes[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][1]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }
+	}
+      }
+    }
+
+    if (edges_for_nodes_index[starting_point][2]>=1){//next node
 
       unitig_back.push_back(edges_for_nodes[starting_point][1]);
 
@@ -298,10 +357,10 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
 
 	  if (edges_for_nodes_index[next_node][1]==1 ){//the next node has exactly one incoming edge
 	    edges_for_nodes_index[next_node][3]=used;
-	    next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	    next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
 	  }
 	}
-	else{//the previous node is in the reverse complement order
+	else{//the next node is in the reverse complement order
       
 	  next_node=edges_for_nodes[starting_point][1][2];
 
@@ -437,6 +496,7 @@ int main(){
       }
       fprintf (pFile, "\n");
     }
+      fprintf (pFile, "\n\n");
   }
   fclose (pFile);
   
