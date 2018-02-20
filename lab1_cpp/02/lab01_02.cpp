@@ -550,18 +550,13 @@ int main(){
   int num_of_edges_for_unitigs=num_of_olaps-num_of_edges_to_delete;
 
   vector<vector<vector<int> > > edges_for_nodes(num_of_reads, vector<vector<int> >(2));//for each node, save outgoing edges, incoming edges
- 
   int edges_for_nodes_index[num_of_reads][4]={{0}}; //save #of total edges, # of outgoing edges,  # of incoming edges, #used or not
-  
   set_up_viable_edges(location, list_of_olaps, edges_for_nodes,edges_for_nodes_index, list_of_exact_olaps, num_of_exact_olaps);
-
   vector<vector<vector<int> > > edges_for_nodes_RC(num_of_reads, vector<vector<int> >(2));//reverse complement list
   set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
-  
+ 
   vector<vector<vector<int> > > unitigs;
-
   find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index);
-
   print_unis(unitigs, list_of_exact_olaps, num_of_exact_olaps);
   
   /*
