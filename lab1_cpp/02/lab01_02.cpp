@@ -238,12 +238,15 @@ void set_up_edges_RC(vector<vector<vector<int> > > &edges_for_nodes, vector<vect
 }
 
 
-void previous_read(previous_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front){
+void previous_read(int previous_node, int FB,  vector<vector<vector<int> > > &edges_for_nodes,  vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &unitig_front){
+
+  
 }
 
-void next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front){
-}
+void next_read(int next_node, int FB,  vector<vector<vector<int> > > &edges_for_nodes,  vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &unitig_back){
 
+  
+}
 
 
 
@@ -325,7 +328,7 @@ int find_unitigs(vector<vector<vector<vector<int> > > >  &unitigs, vector<vector
   
   for(int starting_point=0;starting_point<num_of_reads;starting_point++){
     if (edges_for_nodes_index[starting_point][3]==not_used){//node not used
-      edges_for_nodes_index[starting_point]=used;
+      edges_for_nodes_index[starting_point][3]=used;
       vector<vector<vector<int> > > unitig;
       find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitig);
       unitigs.push_back(unitig);
@@ -360,7 +363,7 @@ int main(){
   
   vector<vector<vector<vector<int> > > > unitigs;
 
-  find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_index);
+  find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index);
 
 
 
