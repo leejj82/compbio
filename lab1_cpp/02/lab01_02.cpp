@@ -302,11 +302,66 @@ void previous_read(int starting_point, int FB,  vector<vector<vector<int> > > &e
 }
 
 void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges_for_nodes,  vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &unitig_back){
+  
+  int i,used=1;
+  int Forward=1, RC=0;
+  int next_node;
 
-  
-  
+  if (FB==Forward){ //current node is in the forward order
+    if (edges_for_nodes_index[starting_point][2]>=1){//next node
+
+      unitig_back.push_back(edges_for_nodes[starting_point][1]);
+
+      if (edges_for_nodes_index[starting_point][2]==1){//there is exactly one edge connecting with next node
+	if (edges_for_nodes[starting_point][1][3]==Forward){//the next node is in the forward order
+
+	  next_node=edges_for_nodes[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][1]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+	else{//the next node is in the reverse complement order
+      
+	  next_node=edges_for_nodes[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][2]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+      }
+    } 
+  }
+  else{ //current node is in the reverse complement order
+    if (edges_for_nodes_index[starting_point][1]>=1){//next node
+
+      unitig_back.push_back(edges_for_nodes_RC[starting_point][1]);
+
+      if (edges_for_nodes_index[starting_point][1]==1){//there is exactly one edge connecting with next node
+	if (edges_for_nodes_RC[starting_point][1][3]==Forward){//the next node is in the forward order
+
+	  next_node=edges_for_nodes_RC[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][1]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+	else{//the next node is in the reverse complement order
+      
+	  next_node=edges_for_nodes_RC[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][2]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+      }
+    }
+  }
 }
-
 
 
 void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs){
@@ -398,6 +453,87 @@ int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<vector<i
   }
 }   
 
+void print_unis( vector<vector<vector<int> > > &unitigs, vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
+
+  int i,j,k,ind,sum,exact_overlap_count;
+  FILE * pFile;
+
+#if SAMPLE
+  pFile = fopen ("sample.unis","w");
+#else
+  pFile = fopen ("lab01.unis","w");
+#endif
+ 	
+	
+  for (i=0;i<unitigs.size();i++){
+
+    sum=read_len;
+    
+    for (j=1;j<unitigs[i].size()-1;j++){
+      sum+=unitigs[i][j][4];
+    }
+
+    exact_overlap_count=0;
+    
+    for (k=0;k<num_of_exact_olaps;k++){
+      for (j=0;j<unitigs[i].size()-1;j++){
+	if(unitigs[i][j][2]==list_of_exact_olaps[k][0]){
+	  exact_overlap_count+=1;
+	}
+      }
+    }
+    
+    fprintf (pFile, "UNI  %02d %*d %*d\n", i+1, 5,(int)(unitigs[i].size())+exact_overlap_count-1,6,sum);//print the title
+
+    fprintf (pFile, "  %03d  ",unitigs[i][1][0]+1);//print the first element
+    ind=unitigs[i][1][1];
+    if (ind==1)
+      fprintf (pFile, "F  ");
+    else
+      fprintf (pFile, "R  ");
+    fprintf (pFile, "%*d\n",4,0);
+
+    for (k=0;k<num_of_exact_olaps;k++){//print exact overlaps
+      if(unitigs[i][1][0]==list_of_exact_olaps[k][0]){
+ 
+	fprintf (pFile, "  %03d  ",list_of_exact_olaps[k][1]+1);
+	ind=list_of_exact_olaps[k][2];
+	if (ind==1)
+	  fprintf (pFile, "F  ");
+	else
+	  fprintf (pFile, "R  ");
+	fprintf (pFile, "%*d\n",4,0);
+	  
+      }
+    }
+
+    for (j=1;j<unitigs[i].size()-1;j++){//print the rest
+      
+      fprintf (pFile, "  %03d  ",unitigs[i][j][2]+1);
+      ind=unitigs[i][j][3];
+      if (ind==1)
+	fprintf (pFile, "F  ");
+      else
+	fprintf (pFile, "R  ");
+      fprintf (pFile, "%*d\n",4,unitigs[i][j][4]);
+
+      for (k=0;k<num_of_exact_olaps;k++){//print exact overlaps
+	if(unitigs[i][j][2]==list_of_exact_olaps[k][0]){
+ 
+	  fprintf (pFile, "  %03d  ",list_of_exact_olaps[k][1]+1);
+	  ind=list_of_exact_olaps[k][2];
+	  if (ind==1)
+	    fprintf (pFile, "F  ");
+	  else
+	    fprintf (pFile, "R  ");
+	  fprintf (pFile, "%*d\n",4,0);
+	  
+	}
+      }
+    }
+  }
+}
+
 int main(){
 
   int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
@@ -426,23 +562,8 @@ int main(){
 
   find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index);
 
-
-
-
-
-
-
+  print_unis(unitigs, list_of_exact_olaps, num_of_exact_olaps);
   
-
-  cout<<num_of_edges_to_delete<<" "<<num_of_edges_for_unitigs<<" ";
-  cout<<list_of_exact_olaps.size()<<" ";
-  for (int i=0;i<list_of_exact_olaps.size();i++){
-    cout<<list_of_exact_olaps[i].size()<<" ";
-    for (int j=0;j<list_of_exact_olaps[i].size();j++){
-      cout<<list_of_exact_olaps[i][j]<<" ";
-    }
-  }
-  cout<<endl;
 
   int i,j,k;
 
@@ -499,6 +620,7 @@ int main(){
       fprintf (pFile, "\n\n");
   }
   fclose (pFile);
+
   
   return 0;
 }
