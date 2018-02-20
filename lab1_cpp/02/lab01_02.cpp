@@ -21,13 +21,12 @@ const int num_of_reads = 300;
 const int read_len = 500;
 #endif
 
-int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads], vector<vector<int> >  &list_of_exact_olaps, int &num_of_exact_olaps,int &num_of_edges_to_delete){
+int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads+1], vector<vector<int> >  &list_of_exact_olaps, int &num_of_exact_olaps,int &num_of_edges_to_delete){
 
   char str0[5],str1[5],str2[5],str3[5];
   int i,j,temp0,temp,FB,num_of_olaps=0;
   vector<int> temp1(3);
 
-  location[0]=0;
 
 #if SAMPLE
   ifstream infile("sample.olaps");
@@ -82,7 +81,8 @@ int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads], vector<v
       location[i]=location[i-1];
     else location[i]+=1;
   }
-
+  location[num_of_reads]=num_of_olaps;
+  
   for (i=0;i<num_of_exact_olaps;i++){
     for (j=0;j<num_of_olaps;j++){
       if(list_of_exact_olaps[i][1]==list_of_olaps[j][0] || list_of_exact_olaps[i][1]==list_of_olaps[j][1]){
@@ -96,7 +96,7 @@ int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads], vector<v
   return num_of_olaps;
 }
 
-void record_edge_to_delete(int list_of_olaps[][6],int num_of_olaps, int location[num_of_reads],int &num_of_edges_to_delete){
+void record_edge_to_delete(int list_of_olaps[][6],int num_of_olaps, int location[num_of_reads+1],int &num_of_edges_to_delete){
 
   /*i the number of read1, j the location of read1, read2 pair, k the location of read1, read2 pair, l, the number of
 		read2, read2 pair*/
@@ -541,7 +541,7 @@ int main(){
   vector<vector<int> > list_of_exact_olaps;//save exact overlaps
   int num_of_exact_olaps=0;
   int num_of_edges_to_delete=0;
-  int location[num_of_reads];//starting point of the read 1 in the list_of_olaps
+  int location[num_of_reads+1]={0};//starting point of the read 1 in the list_of_olaps
 
   int num_of_olaps=read_from_olaps(list_of_olaps,location,list_of_exact_olaps,num_of_exact_olaps,num_of_edges_to_delete);
 
