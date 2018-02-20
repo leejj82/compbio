@@ -6,19 +6,22 @@ using namespace std;
 
 int main(){
 
-  vector<vector<vector<int> > > v_list;
-  vector<vector<int> > v1_list;
-  vector<int> v2_list;
+  int i,m=10;
 
-  v2_list.push_back(2);
-  v1_list.push_back(2);
-  v_list.push_back(v1_list);
+  for ( i=0;i<20;i++){
+    m+=i;
+  }
 
-  
-  cout<<v_list.size()<<v_list.capacity();  
-  //  v_list.push_back({0,1});
+ int seq[m];
 
-  cout<<v_list[0][0][0];
+ for (i=0;i<m;i++)
+   {seq[i]=i;
+ cout<<seq[i];}
+
+
+ 
+
+
   return 0;
 }
 

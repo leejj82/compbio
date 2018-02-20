@@ -271,7 +271,7 @@ void previous_read(int starting_point, int FB,  vector<vector<vector<int> > > &e
 	}
       }
     }
-    else { //there is no edge to the previous node
+    else { //there is no edge to the previous node=>attach null vector
       unitig_front.push_back(null_vector);
     }
   }
@@ -302,7 +302,7 @@ void previous_read(int starting_point, int FB,  vector<vector<vector<int> > > &e
 	}
       }
     }
-    else { //there is no edge to the next node
+    else { //there is no edge to the next node=>attach null vector
       unitig_front.push_back(null_vector);
     }
   }
@@ -341,7 +341,7 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
 	}
       }
     }
-    else { //there is no edge to the previous node
+    else { //there is no edge to the previous node=>attach null vector
       unitig_back.push_back(null_vector);
     }
   }
@@ -371,7 +371,7 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
 	}
       }
     }
-    else { //there is no edge to the next node
+    else { //there is no edge to the next node=>attach null vector
       unitig_back.push_back(null_vector);
     }
   }
@@ -414,7 +414,7 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
 	}
       }
     }
-    else { //there is no edge to the previous node
+    else { //there is no edge to the previous node=>attach null vector
       unitig_front.push_back(null_vector);
     }
 
@@ -443,7 +443,7 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
 	}
       }
     }
-    else { //there is no edge to the next node
+    else { //there is no edge to the next node=>attach null vector
       unitig_back.push_back(null_vector);
     }
 
