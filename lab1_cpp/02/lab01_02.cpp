@@ -250,10 +250,9 @@ void next_read(int next_node, int FB,  vector<vector<vector<int> > > &edges_for_
 
 
 
-void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > > &unitig){
+void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs){
 
-  int used=1;
-  vector<vector<int> > temp;
+  int i,used=1;
   vector<vector<int> > unitig_front;
   vector<vector<int> > unitig_back;
   int Forward=1, RC=0;
@@ -313,15 +312,21 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
 	}
       }
     }
+
+    reverse(unitig_front.begin(),unitig_front.end());
+    unitig_front.insert(unitig_front.end(),unitig_back.begin(),unitig_back.end());
+    unitigs.push_back(unitig_front);
   }
 
   else {//single node case
     cout<<"There exists a single node. Not implemented yet.";
   }
+
+  
 }
   
 
-int find_unitigs(vector<vector<vector<vector<int> > > >  &unitigs, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4]){
+int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4]){
   
   int not_used=0,used=1;
   int front=1,back=0;
@@ -329,10 +334,7 @@ int find_unitigs(vector<vector<vector<vector<int> > > >  &unitigs, vector<vector
   for(int starting_point=0;starting_point<num_of_reads;starting_point++){
     if (edges_for_nodes_index[starting_point][3]==not_used){//node not used
       edges_for_nodes_index[starting_point][3]=used;
-      vector<vector<vector<int> > > unitig;
-      find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitig);
-      unitigs.push_back(unitig);
-  
+      find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitigs);
     }
   }
 }   
@@ -361,7 +363,7 @@ int main(){
   vector<vector<vector<int> > > edges_for_nodes_RC(num_of_reads, vector<vector<int> >(2));//reverse complement list
   set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
   
-  vector<vector<vector<vector<int> > > > unitigs;
+  vector<vector<vector<int> > > unitigs;
 
   find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index);
 
