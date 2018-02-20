@@ -564,7 +564,7 @@ int main(){
 
   print_unis(unitigs, list_of_exact_olaps, num_of_exact_olaps);
   
-
+  /*
   int i,j,k;
 
   FILE * pFile;
@@ -620,7 +620,7 @@ int main(){
       fprintf (pFile, "\n\n");
   }
   fclose (pFile);
-
+*/
   
   return 0;
 }
