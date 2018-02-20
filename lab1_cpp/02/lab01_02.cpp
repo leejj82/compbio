@@ -579,7 +579,7 @@ int main(){
   find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index);
   print_unis(unitigs, list_of_exact_olaps, num_of_exact_olaps);
   
-  
+  /*  
   int i,j,k;
 
   FILE * pFile;
@@ -635,6 +635,6 @@ int main(){
       fprintf (pFile, "\n\n");
   }
   fclose (pFile);
-  
+*/  
   return 0;
 }
