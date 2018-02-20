@@ -1,34 +1,24 @@
 #include<list>
 #include<iostream>
+#include<vector>
 
 using namespace std;
 
-void f(int &temp_count){
-  temp_count=temp_count+4;
-}
 int main(){
 
-  list<int> listOfNumbers;
+  vector<vector<vector<int> > > v_list;
+  vector<vector<int> > v1_list;
+  vector<int> v2_list;
 
-  //Inserting elements at end in list
-  listOfNumbers.push_back(5);
-  listOfNumbers.push_back(6);
+  v2_list.push_back(2);
+  v1_list.push_back(2);
+  v_list.push_back(v1_list);
 
-  //Inserting elements at front in list
-  listOfNumbers.push_front(2);
-  listOfNumbers.push_front(1);
+  
+  cout<<v_list.size()<<v_list.capacity();  
+  //  v_list.push_back({0,1});
 
-  for(list<int>::iterator list_iter = listOfNumbers.begin();
-      list_iter != listOfNumbers.end(); list_iter++)
-    {
-      cout<<*list_iter<<endl;
-    }
-
-
-  int temp_count=0;
-  f(temp_count);
-  cout<<temp_count;
-
+  cout<<v_list[0][0][0];
   return 0;
 }
 
