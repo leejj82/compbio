@@ -584,7 +584,7 @@ int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<int> > &
   }
 }   
 
-int count_the_num_of_connections(vector<vector<vector<int> > > unitigs,int num_of_unitigs,vector<vector<int> > unitigs_info, int unitigs_con_count[][3]){
+int count_the_num_of_connections(vector<vector<vector<int> > > &unitigs,int &num_of_unitigs,vector<vector<int> > &unitigs_info, int unitigs_con_count[][3]){
 
   int i;
   int total_count=0;
@@ -604,7 +604,18 @@ int count_the_num_of_connections(vector<vector<vector<int> > > unitigs,int num_o
   }
   return total_count;
 }
+
+void  find_a_contig(vector<vector<vector<int> > > &unitigs,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], int &num_of_connections){
+
+  int i,j,k;
+  int start_unitig;
   
+  for (i=0;i<num_of_unitigs;i++){
+    if(unitigs_con_count[i][1]==0){
+      start_unitig=i;
+    }
+  }
+}
 
 int main(){
 
@@ -645,16 +656,18 @@ int main(){
   vector<vector<vector<int> > > edges_for_nodes_RC(num_of_reads, vector<vector<int> >(2));//reverse complement list
   set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
  
-  vector<vector<vector<int> > > unitigs;
-  vector<vector<int> > unitigs_info;
+  vector<vector<vector<int> > > unitigs;// contains all unitigs: unitig_number,edges 
+  vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs
   find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
 
-  int num_of_unitigs=unitigs.size();
+  int num_of_unitigs=unitigs.size();//number of unitigs
 
-  int unitigs_con_count[num_of_unitigs][3];
-  int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);
+  int unitigs_con_count[num_of_unitigs][3];//number of connected unitigs count
+  int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);//number of total connections
 
-
+  find_a_contig(unitigs,num_of_unitigs,unitigs_info,unitigs_con_count, num_of_connections);
+  
+  
   cout<<num_of_connections<<"\n";
   for (i=0;i<num_of_unitigs;i++)
     {

@@ -25,5 +25,5 @@ temp.o: temp.cpp
 	g++ -c temp.cpp
 
 clean :
-	rm lab01_03 lab01_03_sample lab01_03_debug lab01_03*.o
+	rm lab01_03 lab01_03_sample lab01_03_debug *.o temp
 

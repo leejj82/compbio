@@ -12,7 +12,6 @@
 using namespace std;
 
  
-
 #if SAMPLE
 const int num_of_reads = 10;
 const int read_len = 250;
@@ -20,6 +19,59 @@ const int read_len = 250;
 const int num_of_reads = 300;
 const int read_len = 500;
 #endif
+
+void read_from_fasta(char list_of_reads[][read_len + 1]){
+
+  char str[500];
+   int i=0;
+
+#if SAMPLE
+  ifstream infile("sample.fasta");
+#else
+  ifstream infile("lab01.fasta");
+#endif
+
+  if (infile.is_open()) {
+    while (infile >> str)
+      {
+	if (str[0]=='>')
+	 {
+	   i=atoi(str+1)-1;
+	 }
+	else
+	  {
+	    strcat(list_of_reads[i],str);
+	    }
+      }
+  }
+  infile.close();
+}
+
+void reversecomplement(char list[][read_len + 1], char list_rc[][read_len + 1]){
+  for (int j=0;j<num_of_reads;j++)
+    {
+      for (int i=0;i<read_len;i++)
+	{
+	  if (list[j][read_len-i-1]=='a')
+	    {
+	      list_rc[j][i]='t';
+	    }
+	  else if (list[j][read_len-i-1]=='t')
+	    {
+	      list_rc[j][i]='a'; 
+	    }
+	  else if (list[j][read_len-i-1]=='c')
+	    {
+	      list_rc[j][i]='g';
+	    }
+	  else if (list[j][read_len-i-1]=='g')
+	    {
+	      list_rc[j][i]='c';
+	    }
+	}
+      list_rc[j][read_len]='\0';
+    }
+ }
 
 int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads+1], vector<vector<int> >  &list_of_exact_olaps, int &num_of_exact_olaps,int &num_of_edges_to_delete){
 
@@ -243,7 +295,6 @@ void previous_read(int starting_point, int FB,  vector<vector<vector<int> > > &e
   int i,used=1;
   int Forward=1, RC=0;
   int previous_node;
-
   int array[5]={-1,-1,-1,-1,-1};
   vector<int> null_vector(array,array+5);
   
@@ -315,9 +366,10 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
   int i,used=1;
   int Forward=1, RC=0;
   int next_node;
+
   int array[5]={-1,-1,-1,-1,-1};
   vector<int> null_vector(array,array+5);
-  
+    
   if (FB==Forward){ //current node is in the forward order
     if (edges_for_nodes_index[starting_point][2]>=1){//next node
 
@@ -379,7 +431,6 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
     }
   }
 }
-
 
 void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs,vector<vector<int> > &unitigs_info, vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps, int &read_exact_match_count){
 
@@ -533,70 +584,58 @@ int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<int> > &
   }
 }   
 
-void print_unis( vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info){
+int count_the_num_of_connections(vector<vector<vector<int> > > &unitigs,int &num_of_unitigs,vector<vector<int> > &unitigs_info, int unitigs_con_count[][3]){
 
-  int i,j,k,ind,sum;
-  FILE * pFile;
-
-#if SAMPLE
-  pFile = fopen ("sample.unis","w");
-#else
-  pFile = fopen ("lab01.unis","w");
-#endif
- 	
-	
-  for (i=0;i<unitigs.size();i++){
- 
-    fprintf (pFile, "UNI  %02d %*d %*d\n", i+1, 5,unitigs_info[i][0],6,unitigs_info[i][1]);//print the title
-
-    fprintf (pFile, "  %03d  ",unitigs[i][1][0]+1);//print the first element
-    ind=unitigs[i][1][1];
-    if (ind==1)
-      fprintf (pFile, "F  ");
-    else
-      fprintf (pFile, "R  ");
-    fprintf (pFile, "%*d\n",4,0);
-
-
-    for (j=1;j<unitigs_info[i][0];j++){//print the rest
-      
-      fprintf (pFile, "  %03d  ",unitigs[i][j][2]+1);
-      ind=unitigs[i][j][3];
-      if (ind==1)
-	fprintf (pFile, "F  ");
-      else
-	fprintf (pFile, "R  ");
-      fprintf (pFile, "%*d\n",4,unitigs[i][j][4]);
+  int i;
+  int total_count=0;
+  
+  for (i=0;i<num_of_unitigs;i++){
+    if (unitigs[i][0][0]!=-1){
+      unitigs_con_count[i][1]=unitigs[i][0].size()/5;
+    } 
+    else unitigs_con_count[i][1]=0;
+    if(unitigs[i][unitigs_info[i][0]][0]!=-1){
+      unitigs_con_count[i][2]=unitigs[i][unitigs_info[i][0]].size()/5;
     }
+    else unitigs_con_count[i][2]=0;
+
+    unitigs_con_count[i][0]=unitigs_con_count[i][1]+unitigs_con_count[i][2];
+    total_count+=unitigs_con_count[i][0];
   }
+  return total_count;
 }
 
-
-
-void print_unis_raw ( vector<vector<vector<int> > > &unitigs){
+void  find_a_contig(vector<vector<vector<int> > > &unitigs,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], int &num_of_connections){
 
   int i,j,k;
-  FILE * pFile;
-
-#if SAMPLE
-  pFile = fopen ("sample.unis_raw","w");
-#else
-  pFile = fopen ("lab01.unis_raw","w");
-#endif
- 	
-
-  for (i=0;i<unitigs.size();i++){
-    for (j=0;j<unitigs[i].size();j++){
-      for (k=0;k<unitigs[i][j].size();k++){
-	fprintf (pFile, "%d  ",unitigs[i][j][k]);
-      }
-      fprintf (pFile, "\n");
+  int start_unitig;
+  
+  for (i=0;i<num_of_unitigs;i++){
+    if(unitigs_con_count[i][1]==0){
+      start_unitig=i;
     }
-    fprintf (pFile, "\n\n");
   }
 }
 
 int main(){
+
+  int i,j,k;
+  
+  //read from fasta file
+  char list_of_reads[num_of_reads][read_len + 1];
+  for (i=0;i<num_of_reads;i++){
+    list_of_reads[i][0] = '\0';
+  }
+
+  read_from_fasta(list_of_reads);
+
+  //define reverse complement reads
+  char  list_of_reads_RC[num_of_reads][read_len + 1];
+  for (i=0;i<num_of_reads;i++){
+    list_of_reads_RC[i][0] = '\0';
+  }
+  
+  reversecomplement(list_of_reads, list_of_reads_RC);
 
   int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
 
@@ -617,55 +656,32 @@ int main(){
   vector<vector<vector<int> > > edges_for_nodes_RC(num_of_reads, vector<vector<int> >(2));//reverse complement list
   set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
  
-  vector<vector<vector<int> > > unitigs;// contains all unitigs: unitig_number,edges
-  vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs 
+  vector<vector<vector<int> > > unitigs;// contains all unitigs: unitig_number,edges 
+  vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs
   find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
 
-  print_unis(unitigs,unitigs_info);
+  int num_of_unitigs=unitigs.size();//number of unitigs
 
-  /* 
-    print_unis_raw(unitigs);
- 
- int i,j,k;
-  FILE * pFile;
-  pFile = fopen ("lab01.list_edges","w");
-  for (i=0;i<num_of_reads;i++){
-    for (j=0;j<2;j++){
-      fprintf (pFile, "%d  ",i);
+  int unitigs_con_count[num_of_unitigs][3];//number of connected unitigs count
+  int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);//number of total connections
 
-      fprintf (pFile, "%d  ",edges_for_nodes_index[i][0]);
-      fprintf (pFile, "%d  ",edges_for_nodes_index[i][j+1]);
-      fprintf (pFile, "%d  ",edges_for_nodes_index[i][3]);
-
-      fprintf (pFile, "      ");
-
-      for (k=0;k<edges_for_nodes[i][j].size();k++){
-	fprintf (pFile, "%d  ",edges_for_nodes[i][j][k]);
-      }                                                      
-
-      fprintf (pFile, "      ");
-
-      for (k=0;k<edges_for_nodes_RC[i][j].size();k++){
-	fprintf (pFile, "%d  ",edges_for_nodes_RC[i][j][k]);
+  find_a_contig(unitigs,num_of_unitigs,unitigs_info,unitigs_con_count, num_of_connections);
+  
+  cout<<num_of_connections<<"\n";
+  for (i=0;i<num_of_unitigs;i++)
+    {
+      for(j=0;j<3;j++){
+	cout<<unitigs_con_count[i][j]<<"   ";
       }
-
-      fprintf (pFile, "\n");
+      cout<<"\n";
     }
-  }
 
-  fclose (pFile);
 
-  pFile = fopen ("lab01.list_of_olaps","w");
-
-  for (i=0;i<num_of_olaps;i++){
-    for (j=0;j<6;j++){
-      fprintf (pFile, "%d  ",list_of_olaps[i][j]);
-    }
-    fprintf (pFile, "\n");
-  }
-
-  fclose (pFile);
-  */
   
   return 0;
 }
+
+
+
+
+ 
