@@ -378,11 +378,12 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
 }
 
 
-void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs){
+void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs,vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
 
-  int i,used=1;
+  int i,j,used=1;
   vector<vector<int> > unitig_front;
   vector<vector<int> > unitig_back;
+  vector<vector<int> > unitig;
   int Forward=1, RC=0;
   int previous_node, next_node;
   vector<int> null_vector(5);
@@ -446,21 +447,56 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
     else { //there is no edge to the next node=>attach null vector
       unitig_back.push_back(null_vector);
     }
-
-    reverse(unitig_front.begin(),unitig_front.end());
+    
+    reverse(unitig_front.begin(),unitig_front.end());//reorganize unitig
     unitig_front.insert(unitig_front.end(),unitig_back.begin(),unitig_back.end());
-    unitigs.push_back(unitig_front);
+
+    for (i=1;i<unitig_front.size();i++){//insert exactly identical reads
+      for (j=0;j<num_of_exact_olaps;j++){
+	if(unitig_front[i][0]==list_of_exact_olaps[j][0]){
+	  if (unitig_front[i][0]!=unitig_front[i][2]){//not the inserted null vector [0 0 0 0 0]
+	    if(unitig_front[i][1]==1){//front order
+	   
+	      vector<int> vec;
+	      vec.push_back(unitig_front[i][0]);
+	      vec.push_back(1);
+	      vec.push_back(list_of_exact_olaps[j][1]);
+	      vec.push_back(list_of_exact_olaps[j][2]);
+	      vec.push_back(0);
+
+	      unitig_front[i][0]=list_of_exact_olaps[j][1];
+	      unitig_front[i][1]=list_of_exact_olaps[j][2];
+	      unitig_front.insert(unitig_front.begin()+i,vec);
+	    }
+	    else {//reverse complement order
+	   
+	      vector<int> vec;
+	      vec.push_back(unitig_front[i][0]);
+	      vec.push_back(0);
+	      vec.push_back(list_of_exact_olaps[j][1]);
+	      vec.push_back(1-list_of_exact_olaps[j][2]);
+	      vec.push_back(0);
+
+	      unitig_front[i][0]=list_of_exact_olaps[j][1];
+	      unitig_front[i][1]=1-list_of_exact_olaps[j][2];
+	    
+	      unitig_front.insert(unitig_front.begin()+i,vec);
+	    }
+	  }
+	}
+      }
+    }  
+
+    unitigs.push_back(unitig_front);//input in the set of unitigs
   }
 
   else {//single node case
     cout<<"There exists a single node. Not implemented yet.";
-  }
-
-  
+  }  
 }
   
 
-int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4]){
+  int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
   
   int not_used=0,used=1;
   int front=1,back=0;
@@ -468,14 +504,14 @@ int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<vector<i
   for(int starting_point=0;starting_point<num_of_reads;starting_point++){
     if (edges_for_nodes_index[starting_point][3]==not_used){//node not used
       edges_for_nodes_index[starting_point][3]=used;
-      find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitigs);
+      find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitigs,list_of_exact_olaps, num_of_exact_olaps);
     }
   }
 }   
 
-void print_unis( vector<vector<vector<int> > > &unitigs, vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
+void print_unis( vector<vector<vector<int> > > &unitigs){
 
-  int i,j,k,ind,sum,exact_overlap_count;
+  int i,j,k,ind,sum;
   FILE * pFile;
 
 #if SAMPLE
@@ -492,18 +528,8 @@ void print_unis( vector<vector<vector<int> > > &unitigs, vector<vector<int> > &l
     for (j=1;j<unitigs[i].size()-1;j++){
       sum+=unitigs[i][j][4];
     }
-
-    exact_overlap_count=0;
-    
-    for (k=0;k<num_of_exact_olaps;k++){
-      for (j=0;j<unitigs[i].size()-1;j++){
-	if(unitigs[i][j][2]==list_of_exact_olaps[k][0]){
-	  exact_overlap_count+=1;
-	}
-      }
-    }
-    
-    fprintf (pFile, "UNI  %02d %*d %*d\n", i+1, 5,(int)(unitigs[i].size())+exact_overlap_count-1,6,sum);//print the title
+ 
+    fprintf (pFile, "UNI  %02d %*d %*d\n", i+1, 5,(int)(unitigs[i].size())-1,6,sum);//print the title
 
     fprintf (pFile, "  %03d  ",unitigs[i][1][0]+1);//print the first element
     ind=unitigs[i][1][1];
@@ -513,19 +539,6 @@ void print_unis( vector<vector<vector<int> > > &unitigs, vector<vector<int> > &l
       fprintf (pFile, "R  ");
     fprintf (pFile, "%*d\n",4,0);
 
-    for (k=0;k<num_of_exact_olaps;k++){//print exact overlaps
-      if(unitigs[i][1][0]==list_of_exact_olaps[k][0]){
- 
-	fprintf (pFile, "  %03d  ",list_of_exact_olaps[k][1]+1);
-	ind=list_of_exact_olaps[k][2];
-	if (ind==1)
-	  fprintf (pFile, "F  ");
-	else
-	  fprintf (pFile, "R  ");
-	fprintf (pFile, "%*d\n",4,0);
-	  
-      }
-    }
 
     for (j=1;j<unitigs[i].size()-1;j++){//print the rest
       
@@ -536,20 +549,6 @@ void print_unis( vector<vector<vector<int> > > &unitigs, vector<vector<int> > &l
       else
 	fprintf (pFile, "R  ");
       fprintf (pFile, "%*d\n",4,unitigs[i][j][4]);
-
-      for (k=0;k<num_of_exact_olaps;k++){//print exact overlaps
-	if(unitigs[i][j][2]==list_of_exact_olaps[k][0]){
- 
-	  fprintf (pFile, "  %03d  ",list_of_exact_olaps[k][1]+1);
-	  ind=list_of_exact_olaps[k][2];
-	  if (ind==1)
-	    fprintf (pFile, "F  ");
-	  else
-	    fprintf (pFile, "R  ");
-	  fprintf (pFile, "%*d\n",4,0);
-	  
-	}
-      }
     }
   }
 }
@@ -576,8 +575,8 @@ int main(){
   set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
  
   vector<vector<vector<int> > > unitigs;
-  find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index);
-  print_unis(unitigs, list_of_exact_olaps, num_of_exact_olaps);
+  find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
+  print_unis(unitigs);
   
   /*  
   int i,j,k;
