@@ -614,6 +614,8 @@ int main(){
   vector<vector<vector<int> > > unitigs;
   find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
 
+  int unitigs_relation[][5];
+  
   int temp=unitigs.size();
   int unitig_list[temp];
   

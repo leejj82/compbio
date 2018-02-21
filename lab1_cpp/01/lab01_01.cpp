@@ -291,8 +291,6 @@ int main()
 
   read_from_fasta(list_of_reads);
 
-  int read_length=strlen(list_of_reads[0]);
-
   //define reverse complement reads
   char  list_of_reads_RC[num_of_reads][read_len + 1];
   for (i=0;i<num_of_reads;i++){

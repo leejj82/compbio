@@ -6,20 +6,12 @@ using namespace std;
 
 int main(){
 
-  int i,m=10;
+  int arr[]={16, 2, 3, 5};
+  vector<int> vec(arr, arr+4);
 
-  for ( i=0;i<20;i++){
-    m+=i;
+for (int i=0;i<vec.size();i++){
+  cout<<vec[i]<<"  ";
   }
-
- int seq[m];
-
- for (i=0;i<m;i++)
-   {seq[i]=i;
- cout<<seq[i];}
-
-
- 
 
 
   return 0;
