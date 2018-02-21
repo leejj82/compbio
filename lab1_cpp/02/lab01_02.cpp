@@ -381,7 +381,7 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
 }
 
 
-void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs,vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps, int &read_exact_match_count){
+void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs,vector<vector<int> > &unitigs_info, vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps, int &read_exact_match_count){
 
   int i,j,used=1;
   vector<vector<int> > unitig_front;
@@ -392,7 +392,10 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
 
   int array[5]={-1,-1,-1,-1,-1};
   vector<int> null_vector(array,array+5);
+  vector<int> temp(2);
 
+  int sum;
+  
   if (edges_for_nodes_index[starting_point][0]>0){ //there exists at least one edge connected to the node
   
     if (edges_for_nodes_index[starting_point][1]>=1){  //previous nod
@@ -496,7 +499,18 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
       }
     }
 
+    temp[0]=(int)(unitig_front.size())-1; //# of reads in a unitig
+    sum=read_len;//sum is the length of each unitig
+    for (i=1;i<temp[0];i++){
+      sum+=unitig_front[i][4];
+    }
+    temp[1]=sum;
+
+    unitigs_info.push_back(temp);//record # of reads and length for each unitig
     unitigs.push_back(unitig_front);//input in the set of unitigs
+
+
+   
   }
 
   else {//single node case
@@ -505,7 +519,7 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
 }
   
 
-  int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
+int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<int> > &unitigs_info,  vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
   
   int not_used=0,used=1;
   int front=1,back=0;
@@ -514,12 +528,12 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
   for(int starting_point=0;starting_point<num_of_reads;starting_point++){
     if (edges_for_nodes_index[starting_point][3]==not_used){//node not used
       edges_for_nodes_index[starting_point][3]=used;
-      find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitigs,list_of_exact_olaps, num_of_exact_olaps, read_exact_match_count);
+      find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitigs, unitigs_info, list_of_exact_olaps, num_of_exact_olaps, read_exact_match_count);
     }
   }
 }   
 
-void print_unis( vector<vector<vector<int> > > &unitigs){
+void print_unis( vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info){
 
   int i,j,k,ind,sum;
   FILE * pFile;
@@ -532,14 +546,8 @@ void print_unis( vector<vector<vector<int> > > &unitigs){
  	
 	
   for (i=0;i<unitigs.size();i++){
-
-    sum=read_len;
-    
-    for (j=1;j<unitigs[i].size()-1;j++){
-      sum+=unitigs[i][j][4];
-    }
  
-    fprintf (pFile, "UNI  %02d %*d %*d\n", i+1, 5,(int)(unitigs[i].size())-1,6,sum);//print the title
+    fprintf (pFile, "UNI  %02d %*d %*d\n", i+1, 5,unitigs_info[i][0],6,unitigs_info[i][1]);//print the title
 
     fprintf (pFile, "  %03d  ",unitigs[i][1][0]+1);//print the first element
     ind=unitigs[i][1][1];
@@ -550,7 +558,7 @@ void print_unis( vector<vector<vector<int> > > &unitigs){
     fprintf (pFile, "%*d\n",4,0);
 
 
-    for (j=1;j<unitigs[i].size()-1;j++){//print the rest
+    for (j=1;j<unitigs_info[i][0];j++){//print the rest
       
       fprintf (pFile, "  %03d  ",unitigs[i][j][2]+1);
       ind=unitigs[i][j][3];
@@ -610,13 +618,15 @@ int main(){
   set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
  
   vector<vector<vector<int> > > unitigs;
-  find_unitigs(unitigs,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
+  vector<vector<int> > unitigs_info;
+  find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
 
-  print_unis(unitigs);
-  print_unis_raw(unitigs);
+  print_unis(unitigs,unitigs_info);
+
+  /* 
+    print_unis_raw(unitigs);
  
-  /*
-  int i,j,k;
+ int i,j,k;
   FILE * pFile;
   pFile = fopen ("lab01.list_edges","w");
   for (i=0;i<num_of_reads;i++){
