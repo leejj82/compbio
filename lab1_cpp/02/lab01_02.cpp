@@ -378,7 +378,7 @@ void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges
 }
 
 
-void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs,vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
+void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs,vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps, int &read_exact_match_count){
 
   int i,j,used=1;
   vector<vector<int> > unitig_front;
@@ -451,41 +451,45 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
     reverse(unitig_front.begin(),unitig_front.end());//reorganize unitig
     unitig_front.insert(unitig_front.end(),unitig_back.begin(),unitig_back.end());
 
-    for (i=1;i<unitig_front.size();i++){//insert exactly identical reads
-      for (j=0;j<num_of_exact_olaps;j++){
-	if(unitig_front[i][0]==list_of_exact_olaps[j][0]){
-	  if (unitig_front[i][0]!=unitig_front[i][2]){//not the inserted null vector [0 0 0 0 0]
-	    if(unitig_front[i][1]==1){//front order
-	   
-	      vector<int> vec;
-	      vec.push_back(unitig_front[i][0]);
-	      vec.push_back(1);
-	      vec.push_back(list_of_exact_olaps[j][1]);
-	      vec.push_back(list_of_exact_olaps[j][2]);
-	      vec.push_back(0);
+    if (read_exact_match_count<num_of_exact_olaps){
+      for (i=1;i<unitig_front.size();i++){//insert exactly identical reads
+	for (j=0;j<num_of_exact_olaps;j++){
+	  if(unitig_front[i][0]==list_of_exact_olaps[j][0]){
 
-	      unitig_front[i][0]=list_of_exact_olaps[j][1];
-	      unitig_front[i][1]=list_of_exact_olaps[j][2];
-	      unitig_front.insert(unitig_front.begin()+i,vec);
-	    }
-	    else {//reverse complement order
+	    read_exact_match_count++;
+	    if (unitig_front[i][0]!=unitig_front[i][2]){//not the inserted null vector [0 0 0 0 0]
+	      if(unitig_front[i][1]==1){//front order
 	   
-	      vector<int> vec;
-	      vec.push_back(unitig_front[i][0]);
-	      vec.push_back(0);
-	      vec.push_back(list_of_exact_olaps[j][1]);
-	      vec.push_back(1-list_of_exact_olaps[j][2]);
-	      vec.push_back(0);
+		vector<int> vec;
+		vec.push_back(unitig_front[i][0]);
+		vec.push_back(1);
+		vec.push_back(list_of_exact_olaps[j][1]);
+		vec.push_back(list_of_exact_olaps[j][2]);
+		vec.push_back(0);
 
-	      unitig_front[i][0]=list_of_exact_olaps[j][1];
-	      unitig_front[i][1]=1-list_of_exact_olaps[j][2];
+		unitig_front[i][0]=list_of_exact_olaps[j][1];
+		unitig_front[i][1]=list_of_exact_olaps[j][2];
+		unitig_front.insert(unitig_front.begin()+i,vec);
+	      }
+	      else {//reverse complement order
+	   
+		vector<int> vec;
+		vec.push_back(unitig_front[i][0]);
+		vec.push_back(0);
+		vec.push_back(list_of_exact_olaps[j][1]);
+		vec.push_back(1-list_of_exact_olaps[j][2]);
+		vec.push_back(0);
+
+		unitig_front[i][0]=list_of_exact_olaps[j][1];
+		unitig_front[i][1]=1-list_of_exact_olaps[j][2];
 	    
-	      unitig_front.insert(unitig_front.begin()+i,vec);
+		unitig_front.insert(unitig_front.begin()+i,vec);
+	      }
 	    }
 	  }
 	}
       }
-    }  
+    }
 
     unitigs.push_back(unitig_front);//input in the set of unitigs
   }
@@ -500,11 +504,12 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
   
   int not_used=0,used=1;
   int front=1,back=0;
+  int read_exact_match_count=0;
   
   for(int starting_point=0;starting_point<num_of_reads;starting_point++){
     if (edges_for_nodes_index[starting_point][3]==not_used){//node not used
       edges_for_nodes_index[starting_point][3]=used;
-      find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitigs,list_of_exact_olaps, num_of_exact_olaps);
+      find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitigs,list_of_exact_olaps, num_of_exact_olaps, read_exact_match_count);
     }
   }
 }   
