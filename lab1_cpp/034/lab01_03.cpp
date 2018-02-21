@@ -582,14 +582,17 @@ int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<int> > &
       find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitigs, unitigs_info, list_of_exact_olaps, num_of_exact_olaps, read_exact_match_count);
     }
   }
-}   
+}
 
-int count_the_num_of_connections(vector<vector<vector<int> > > &unitigs,int &num_of_unitigs,vector<vector<int> > &unitigs_info, int unitigs_con_count[][3]){
+int count_the_num_of_connections(vector<vector<vector<int> > > &unitigs,int &num_of_unitigs,vector<vector<int> > &unitigs_info, int unitigs_con_count[][4]){
 
   int i;
   int total_count=0;
   
   for (i=0;i<num_of_unitigs;i++){
+
+    unitigs_con_count[i][3]=0; //will be used as an idicator for 1=used in contig 0=not used in contig
+    
     if (unitigs[i][0][0]!=-1){
       unitigs_con_count[i][1]=unitigs[i][0].size()/5;
     } 
@@ -605,16 +608,39 @@ int count_the_num_of_connections(vector<vector<vector<int> > > &unitigs,int &num
   return total_count;
 }
 
-void  find_a_contig(vector<vector<vector<int> > > &unitigs,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], int &num_of_connections){
+void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info){
 
-  int i,j,k;
-  int start_unitig;
+  int num_of_unitigs=unitigs.size();//number of unitigs
+
+  int unitigs_con_count[num_of_unitigs][4];//number of connected unitigs count
+  int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);//number of total connections
   
-  for (i=0;i<num_of_unitigs;i++){
-    if(unitigs_con_count[i][1]==0){
-      start_unitig=i;
+  int i,j,k;
+  int start_unitig=0;
+
+  for (i=0;i<num_of_unitigs;i++){//if an end of a unitig does not have a connecting edges, then the unitig can be a boundary of a contig
+    if(unitigs_con_count[i][1]==0 || unitigs_con_count[i][2]==0){
+      if(unitigs_con_count[i][0]==0){
+	cout<<"There is a unitig without any edges to outside";
+      }
+      else
+	start_unitig=i;
     }
   }
+
+  
+  
+
+
+  
+  cout<<num_of_connections<<"\n";
+  for (i=0;i<num_of_unitigs;i++)
+    {
+      for(j=0;j<4;j++){
+	cout<<unitigs_con_count[i][j]<<"   ";
+      }
+      cout<<"\n";
+    }
 }
 
 int main(){
@@ -660,24 +686,8 @@ int main(){
   vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs
   find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
 
-  int num_of_unitigs=unitigs.size();//number of unitigs
-
-  int unitigs_con_count[num_of_unitigs][3];//number of connected unitigs count
-  int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);//number of total connections
-
-  find_a_contig(unitigs,num_of_unitigs,unitigs_info,unitigs_con_count, num_of_connections);
-  
-  
-  cout<<num_of_connections<<"\n";
-  for (i=0;i<num_of_unitigs;i++)
-    {
-      for(j=0;j<3;j++){
-	cout<<unitigs_con_count[i][j]<<"   ";
-      }
-      cout<<"\n";
-    }
-
-
+  find_a_contig(unitigs,unitigs_info);
+  //print_a_contig();
   
   return 0;
 }
