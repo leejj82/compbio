@@ -584,6 +584,27 @@ int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<int> > &
   }
 }   
 
+int count_the_num_of_connections(vector<vector<vector<int> > > unitigs,int num_of_unitigs,vector<vector<int> > unitigs_info, int unitigs_con_count[][3]){
+
+  int i;
+  int total_count=0;
+  
+  for (i=0;i<num_of_unitigs;i++){
+    if (unitigs[i][0][0]!=-1){
+      unitigs_con_count[i][1]=unitigs[i][0].size()/5;
+    } 
+    else unitigs_con_count[i][1]=0;
+    if(unitigs[i][unitigs_info[i][0]][0]!=-1){
+      unitigs_con_count[i][2]=unitigs[i][unitigs_info[i][0]].size()/5;
+    }
+    else unitigs_con_count[i][2]=0;
+
+    unitigs_con_count[i][0]=unitigs_con_count[i][1]+unitigs_con_count[i][2];
+    total_count+=unitigs_con_count[i][0];
+  }
+  return total_count;
+}
+  
 
 int main(){
 
@@ -627,6 +648,23 @@ int main(){
   vector<vector<vector<int> > > unitigs;
   vector<vector<int> > unitigs_info;
   find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
+
+  int num_of_unitigs=unitigs.size();
+
+  int unitigs_con_count[num_of_unitigs][3];
+  int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);
+
+
+  cout<<num_of_connections<<"\n";
+  for (i=0;i<num_of_unitigs;i++)
+    {
+      for(j=0;j<3;j++){
+	cout<<unitigs_con_count[i][j]<<"   ";
+      }
+      cout<<"\n";
+    }
+
+
   
   return 0;
 }
