@@ -685,19 +685,16 @@ void connected_unitigs(vector<vector<vector<int> > > &unitigs,int &num_of_unitig
   }
 }
 
-void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info){
+void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info, char *contig){
 
   int num_of_unitigs=unitigs.size();//number of unitigs
   int unitigs_con_count[num_of_unitigs][4];//number of connected unitigs count
   int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);//number of total connections
-
   
   vector<vector<vector<int> > > unis(num_of_unitigs);
   vector<vector<vector<int> > > unis_RC(num_of_unitigs);
-
   setup_unis(unitigs, unis, unis_RC,num_of_unitigs, unitigs_info );
   
-
   int i,j,k;
   int start_unitig=0;
 
@@ -714,7 +711,6 @@ void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > 
   }
 
   vector<vector<vector<vector<int> > > > unitigs_con(num_of_unitigs,vector<vector<vector<int> > >(2)); //record connected unitigs [prior unitig F/B next unitig F/B distance]
-
   connected_unitigs(unitigs, num_of_unitigs,unitigs_info, unitigs_con_count,unitigs_con);
 
 
@@ -809,8 +805,10 @@ int main(){
   vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs
   find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
 
-  find_a_contig(unitigs,unitigs_info);
-  //print_a_contig();
+  char contig[num_of_reads*read_len];
+  find_a_contig(unitigs,unitigs_info,contig);
+
+  //print_a_contig(contig);
   
   return 0;
 }
