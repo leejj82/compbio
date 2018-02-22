@@ -609,6 +609,7 @@ int count_the_num_of_connections(vector<vector<vector<int> > > &unitigs,int &num
 }
 
 void setup_unis(vector<vector<vector<int> > > &unitigs,vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info ){
+
   int i,j,k;
   
   for (i=0;i<num_of_unitigs;i++){
@@ -685,6 +686,10 @@ void connected_unitigs(vector<vector<vector<int> > > &unitigs,int &num_of_unitig
   }
 }
 
+void mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][4], vector<vector<vector<vector<int> > > > &unitigs_con){
+  cout<<"to implement";
+}
+
 void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info, char *contig){
 
   int num_of_unitigs=unitigs.size();//number of unitigs
@@ -713,6 +718,7 @@ void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > 
   vector<vector<vector<vector<int> > > > unitigs_con(num_of_unitigs,vector<vector<vector<int> > >(2)); //record connected unitigs [prior unitig F/B next unitig F/B distance]
   connected_unitigs(unitigs, num_of_unitigs,unitigs_info, unitigs_con_count,unitigs_con);
 
+  mate_pair_check(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con);
 
 
 
