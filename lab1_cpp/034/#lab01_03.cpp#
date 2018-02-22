@@ -690,14 +690,12 @@ void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > 
   int num_of_unitigs=unitigs.size();//number of unitigs
   int unitigs_con_count[num_of_unitigs][4];//number of connected unitigs count
   int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);//number of total connections
-
   
   vector<vector<vector<int> > > unis(num_of_unitigs);
   vector<vector<vector<int> > > unis_RC(num_of_unitigs);
 
   setup_unis(unitigs, unis, unis_RC,num_of_unitigs, unitigs_info );
   
-
   int i,j,k;
   int start_unitig=0;
 

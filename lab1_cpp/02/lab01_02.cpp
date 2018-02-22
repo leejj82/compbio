@@ -398,7 +398,7 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
   
   if (edges_for_nodes_index[starting_point][0]>0){ //there exists at least one edge connected to the node
   
-    if (edges_for_nodes_index[starting_point][1]>=1){  //previous nod
+    if (edges_for_nodes_index[starting_point][1]>=1){  //previous node
 
       unitig_front.push_back(edges_for_nodes[starting_point][0]);
 
