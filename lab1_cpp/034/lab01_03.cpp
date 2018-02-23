@@ -719,7 +719,7 @@ void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[num_o
    
 }
 
-void mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con){
+void mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int mate_table[num_of_reads+1]){
 
   int i,j,k,l,m,n;
   int FB,next_uni;
@@ -781,13 +781,18 @@ void mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<i
 }
 
 int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con,vector<vector<int> > &contig_unis_list, int mate_table[num_of_reads+1]){
- 
 
+  if (mate_table[num_of_reads]!=num_of_reads){
 
-   
-  mate_pair_check(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con);
-    
-  return 0;
+    mate_pair_check(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con,contig_unis_list, mate_table);
+    iterate_for_finding_a_contig(unis, unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con,contig_unis_list, mate_table);
+
+    return 0;
+  }
+  else {
+    return 1;
+  }
+  
 }
 
 void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, char *contig){
