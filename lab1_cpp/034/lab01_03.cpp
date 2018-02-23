@@ -711,10 +711,12 @@ void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[num_o
     }
    }
 
-   /*   for (i=0;i<num_of_reads+1;i++){
+#if 0
+   for (i=0;i<num_of_reads+1;i++){
      cout<<i<<"  "<<mate_table[i]<<"\n";
-     }*/
-
+   }
+#endif
+   
 }
 
 void fill_the_mate_pair_table(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_read_list, vector<vector<vector<vector<int> > > > & mate_pair_table){
