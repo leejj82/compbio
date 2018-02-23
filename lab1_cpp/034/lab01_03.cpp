@@ -719,7 +719,7 @@ void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[num_o
    
 }
 
-void fill_the_mate_pair_table(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_read_list, vector<vector<vector<vector<int> > > > & mate_pair_table){
+void mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con){
 
   int i,j,k,l,m,n;
   int FB,next_uni;
@@ -780,15 +780,13 @@ void fill_the_mate_pair_table(vector<vector<vector<int> > > &unis, vector<vector
   }
 }
 
-int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con,vector<vector<int> > &contig_unis_list, int mate_table[300]){
-  /*
-  fill_the_mate_pair_table(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con, contig_read_list,mate_pair_table);
+int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con,vector<vector<int> > &contig_unis_list, int mate_table[num_of_reads+1]){
+ 
 
-  while(start_unitig!=-1){
-    mate_pair_check(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con, mate_pair_table);
-    return 1;
-  }
-  */
+
+   
+  mate_pair_check(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con);
+    
   return 0;
 }
 
@@ -817,10 +815,6 @@ void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vec
 
   int mate_table[num_of_reads+1]={0};//count mate_pair numbers
   check_self_pairing(unis,mate_table,num_of_unitigs,unitigs_info);
-
-
-
-
   
   iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs, unitigs_info, unitigs_con_count, unitigs_con,contig_unis_list,mate_table);
 
