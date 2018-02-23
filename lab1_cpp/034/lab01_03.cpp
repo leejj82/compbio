@@ -15,9 +15,13 @@ using namespace std;
 #if SAMPLE
 const int num_of_reads = 10;
 const int read_len = 250;
+const int l_bd_mp= 950;
+const int u_bd_mp= 1000;
 #else
 const int num_of_reads = 300;
 const int read_len = 500;
+const int l_bd_mp= 1900;
+const int u_bd_mp= 3100;
 #endif
 
 void read_from_fasta(char list_of_reads[][read_len + 1]){
@@ -684,11 +688,34 @@ void connected_unitigs(vector<vector<vector<int> > > &unitigs,int &num_of_unitig
   }
 }
 
-void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[300]){
-  
-  
-}
+void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[num_of_reads],int &num_of_unitigs,vector<vector<int> > &unitigs_info){
 
+  int i,j,k;
+  int mate_pair_distance;
+
+   for (i=0;i<num_of_unitigs;i++){
+    for (j=0;j<unitigs_info[i][0]-1;j++){ 
+      for (k=j+1;k<unitigs_info[i][0];k++){
+	if( ((unis[i][j][0]==unis[i][k][0]+1) && (unis[i][k][0]%2==0))  ||  ((unis[i][j][0]==unis[i][k][0]-1) && (unis[i][k][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+	  if(unis[i][j][1]==1 && unis[i][k][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
+	    
+	    mate_pair_distance=unis[i][k][2]-unis[i][j][2];
+
+	    if ((l_bd_mp <=mate_pair_distance ) && (u_bd_mp >=mate_pair_distance )){//two reads are distanced between 2400-3600
+	      mate_table[unis[i][j][0]]=1;mate_table[unis[i][k][0]]=1;//found mate-pair within a unitig
+	      
+	    }
+	  }
+	}
+      }
+    }
+   }
+
+   /*   for (i=0;i<num_of_reads;i++){
+     cout<<i<<"  "<<mate_table[i]<<"\n";
+     }*/
+
+}
 
 void fill_the_mate_pair_table(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_read_list, vector<vector<vector<vector<int> > > > & mate_pair_table){
 
@@ -720,7 +747,7 @@ void fill_the_mate_pair_table(vector<vector<vector<int> > > &unis, vector<vector
 		  //		  cout<<mate_pair_distance<<"  ";
 
 
-		  if ((1900 <=mate_pair_distance ) && (3100 >=mate_pair_distance )){//two reads are distanced between 2400-3600
+		  if ((l_bd_mp <=mate_pair_distance ) && (u_bd_mp >=mate_pair_distance )){//two reads are distanced between 2400-3600
 		    mate_pair_count++;
 		  }
 		}
@@ -735,7 +762,7 @@ void fill_the_mate_pair_table(vector<vector<vector<int> > > &unis, vector<vector
 		if(unis[i][l][1]==j && unis_RC[next_uni][m][1]==(1-j) ){// two reads are facing each other 5'-3' 3'-5' way
 		 
 		  mate_pair_distance=(1-j)*(unitigs_info[next_uni][1]-unis_RC[next_uni][m][2]+unis[i][l][2])+j*(unitigs_info[i][1]-unis[i][l][2]+unis_RC[next_uni][m][2]);
-		  if ((1900 <=mate_pair_distance ) && (3100 >=mate_pair_distance )){//two reads are distanced between 2400-3600
+		  if ((l_bd_mp <=mate_pair_distance ) && (u_bd_mp >=mate_pair_distance )){//two reads are distanced between 2400-3600
 		    mate_pair_count++;
 		  }
 		}
@@ -752,14 +779,14 @@ void fill_the_mate_pair_table(vector<vector<vector<int> > > &unis, vector<vector
 }
 
 int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con,vector<vector<int> > &contig_unis_list, int mate_table[300]){
-
+  /*
   fill_the_mate_pair_table(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con, contig_read_list,mate_pair_table);
 
   while(start_unitig!=-1){
     mate_pair_check(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con, mate_pair_table);
     return 1;
   }
-
+  */
   return 0;
 }
 
@@ -786,8 +813,8 @@ void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vec
   a_unis[2]=0;
   contig_unis_list.push_back(a_unis);//insert the first unitig
 
-  int mate_table[300]={0};
-  check_self_pairing(unis, mate_table);
+  int mate_table[num_of_reads]={0};
+  check_self_pairing(unis,mate_table,num_of_unitigs,unitigs_info);
 
 
 
@@ -800,7 +827,7 @@ void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vec
 void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info, char *contig){
 
   int num_of_unitigs=unitigs.size();//number of unitigs
-  int unitigs_con_count[num_of_unitigs][4];//number of connected unitigs count
+  int unitigs_con_count[num_of_unitigs][3];//number of connected unitigs count
   int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);//number of total connections
   
   vector<vector<vector<int> > > unis(num_of_unitigs);
