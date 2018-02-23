@@ -651,9 +651,9 @@ void connected_unitigs(vector<vector<vector<int> > > &unitigs,int &num_of_unitig
 	     
 	      if(equal(unitigs[i][j*unitigs_info[i][0]].begin()+k*5,unitigs[i][j*unitigs_info[i][0]].begin()+(k+1)*5,unitigs[l][m*unitigs_info[l][0]].begin()+n*5) && m!=j && unitigs[i][j*unitigs_info[i][0]][k*5]!=-1 ){
 		temp[0]=(j*i+(1-j)*l);
-		temp[1]=0;
+		temp[1]=1;//Forward=1, Reverse Complement=0
 		temp[2]=(j*l+(1-j)*i);
-		temp[3]=0;
+		temp[3]=1;;//Forward=1, Reverse Complement=0
 		temp[4]=unitigs[i][j*unitigs_info[i][0]][4+k*5];
 						  
 		unitigs_con[i][j].push_back(temp);
@@ -662,9 +662,9 @@ void connected_unitigs(vector<vector<vector<int> > > &unitigs,int &num_of_unitig
 	      else if (unitigs[i][j*unitigs_info[i][0]][k*5]==unitigs[l][m*unitigs_info[l][0]][2+n*5] && unitigs[i][j*unitigs_info[i][0]][1+k*5]==1-unitigs[l][m*unitigs_info[l][0]][3+n*5] && unitigs[i][j*unitigs_info[i][0]][2+k*5]==unitigs[l][m*unitigs_info[l][0]][0+n*5]  && unitigs[i][j*unitigs_info[i][0]][3+k*5]==1-unitigs[l][m*unitigs_info[l][0]][1+n*5] && unitigs[i][j*unitigs_info[i][0]][4+k*5]==unitigs[l][m*unitigs_info[l][0]][4+n*5] && m==j && unitigs[i][j*unitigs_info[i][0]][k*5]!=-1){
 
 		temp[0]=(j*i+(1-j)*l);
-		temp[1]=1-j;
+		temp[1]=j;;//Forward=1, Reverse Complement=0
 		temp[2]=(j*l+(1-j)*i);
-		temp[3]=j;
+		temp[3]=1-j;;//Forward=1, Reverse Complement=0
 		temp[4]=unitigs[i][j*unitigs_info[i][0]][4+k*5];
 						  
 		unitigs_con[i][j].push_back(temp);
@@ -686,8 +686,96 @@ void connected_unitigs(vector<vector<vector<int> > > &unitigs,int &num_of_unitig
   }
 }
 
-void mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][4], vector<vector<vector<vector<int> > > > &unitigs_con){
-  cout<<"to implement";
+void fill_the_mate_pair_table(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][4], vector<vector<vector<vector<int> > > > &unitigs_con,int &start_unitig, vector<vector<vector<vector<int> > > > & mate_pair_table){
+
+  int i,j,k,l,m,n;
+  int FB,next_uni;
+  int mate_pair_count, fatal_no_mate_count,mate_pair_distance;
+
+  for (i=0;i<num_of_unitigs;i++){
+    for (j=0;j<2;j++){
+      for (k=0;k<unitigs_con_count[i][j+1];k++){
+	
+	FB=unitigs_con[i][j][k][(1-j) + j*3];//1= Forward or 0= Reverse complement
+	next_uni=unitigs_con[i][j][k][j*2];// the index for compared unitig
+	mate_pair_count=0;
+	fatal_no_mate_count=0;
+	
+	if(FB==1){//connected forward
+	  for (l=0;l<unitigs_info[i][0];l++){
+	    for (m=0;m<unitigs_info[next_uni][0];m++){
+	      if( ((unis[i][l][0]==unis[next_uni][m][0]+1) && (unis[next_uni][m][0]%2==0))  || ((unis[i][l][0]==unis[next_uni][m][0]-1) && (unis[next_uni][m][0]%2==1))){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+		if(unis[i][l][1]==j && unis[next_uni][m][1]==(1-j) ){// two reads are facing each other 5'-3' 3'-5' way
+
+		  // cout<<unis[next_uni][m][0]<<"  " <<unis[i][l][0]<<"  ";
+
+
+		  
+		  mate_pair_distance=(1-j)*(unitigs_info[next_uni][1]-unis[next_uni][m][2]+unis[i][l][2])+j*(unitigs_info[i][1]-unis[i][l][2]+unis[next_uni][m][2]);
+
+		  //		  cout<<mate_pair_distance<<"  ";
+
+
+		  if ((1900 <=mate_pair_distance ) && (3100 >=mate_pair_distance )){//two reads are distanced between 2400-3600
+		    mate_pair_count++;
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+	else {//connected reverse_complement
+	  for (l=0;l<unitigs_info[i][0];l++){
+	    for (m=0;m<unitigs_info[next_uni][0];m++){
+	      if( ((unis[i][l][0]==unis_RC[next_uni][m][0]+1) && (unis_RC[next_uni][m][0]%2==0))  || ((unis[i][l][0]==unis_RC[next_uni][m][0]-1) && (unis_RC[next_uni][m][0]%2==1))){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+		if(unis[i][l][1]==j && unis_RC[next_uni][m][1]==(1-j) ){// two reads are facing each other 5'-3' 3'-5' way
+		 
+		  mate_pair_distance=(1-j)*(unitigs_info[next_uni][1]-unis_RC[next_uni][m][2]+unis[i][l][2])+j*(unitigs_info[i][1]-unis[i][l][2]+unis_RC[next_uni][m][2]);
+		  if ((1900 <=mate_pair_distance ) && (3100 >=mate_pair_distance )){//two reads are distanced between 2400-3600
+		    mate_pair_count++;
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+	
+	//	cout<<i<<"  "<<j<<"  "<<next_uni<<"  "<<unitigs_con[i][j][k][(1-j) + j*3]<<"  "<<mate_pair_count<<"\n";
+	
+      }
+    }
+  }
+}
+
+void iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][4], vector<vector<vector<vector<int> > > > &unitigs_con,int &start_unitig,vector<vector<vector<vector<int> > > > & mate_pair_table){
+
+  /* while(start_unitig!=-1){
+      mate_pair_check(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con, start_unitig,mate_pair_table);
+      }*/
+}
+
+void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][4], vector<vector<vector<vector<int> > > > &unitigs_con, char *contig){
+ 
+  int i,start_unitig=0;
+
+  vector<vector<vector<vector<int> > > > mate_pair_table(num_of_unitigs);//records mate_pair relationship
+  fill_the_mate_pair_table(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con, start_unitig,mate_pair_table);
+ 
+  
+  for (i=0;i<num_of_unitigs;i++){//if an end of a unitig does not have a connecting edges, then the unitig can be a boundary of a contig
+    if(unitigs_con_count[i][1]==0 || unitigs_con_count[i][2]==0){
+      if(unitigs_con_count[i][0]==0){
+	cout<<"There is a unitig without any edges to outside";
+      }
+      else{
+	start_unitig=i;
+	break;
+      }
+    }
+  }
+
+  iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs, unitigs_info, unitigs_con_count, unitigs_con, start_unitig, mate_pair_table);
+  
 }
 
 void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info, char *contig){
@@ -701,33 +789,18 @@ void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > 
   setup_unis(unitigs, unis, unis_RC,num_of_unitigs, unitigs_info );
   
   int i,j,k;
-  int start_unitig=0;
-
-  for (i=0;i<num_of_unitigs;i++){//if an end of a unitig does not have a connecting edges, then the unitig can be a boundary of a contig
-    if(unitigs_con_count[i][1]==0 || unitigs_con_count[i][2]==0){
-      if(unitigs_con_count[i][0]==0){
-	cout<<"There is a unitig without any edges to outside";
-      }
-      else{
-	start_unitig=i;
-	break;
-      }
-    }
-  }
-
+ 
   vector<vector<vector<vector<int> > > > unitigs_con(num_of_unitigs,vector<vector<vector<int> > >(2)); //record connected unitigs [prior unitig F/B next unitig F/B distance]
   connected_unitigs(unitigs, num_of_unitigs,unitigs_info, unitigs_con_count,unitigs_con);
 
-  mate_pair_check(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con);
+  really_find_a_contig(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con, contig);
 
 
 
 
 
-  
-
-  cout<<start_unitig<<"\n";
-  cout<<num_of_connections<<"\n";
+  /*
+  cout<<"unitigs_info"<<"\n";
   for (i=0;i<num_of_unitigs;i++)
     {
       for(j=0;j<2;j++){
@@ -735,17 +808,17 @@ void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > 
       }
       cout<<"\n";
     }
-  
-  for (i=0;i<num_of_unitigs;i++)
-    {
+
+   cout<<"unitigs_con_count"<<"\n";
+  for (i=0;i<num_of_unitigs;i++){
       for(j=0;j<4;j++){
 	cout<<unitigs_con_count[i][j]<<"   ";
       }
       cout<<"\n";
     }
-  
-   for (i=0;i<num_of_unitigs;i++)
-    {
+    
+  cout<<"unitigs_con"<<"\n";
+  for (i=0;i<num_of_unitigs;i++){
       for(j=0;j<2;j++){
 	cout<<i<<" "<<j<<" ";
 	for(k=0;k<unitigs_con[i][j].size();k++){
@@ -759,11 +832,11 @@ void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > 
       }
      
     }
-   /*
+  
    for (i=0;i<unitigs_info[2][0];i++){
      cout<< unis[2][i][0]<<" "<<unis[2][i][1]<<" "<<unis[2][i][2]<<"     "<< unis_RC[2][i][0]<<" "<< unis_RC[2][i][1]<<" "<< unis_RC[2][i][2]<<"\n";
    }
-   */
+  */
 
 
 }
