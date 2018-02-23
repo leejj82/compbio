@@ -688,7 +688,7 @@ void connected_unitigs(vector<vector<vector<int> > > &unitigs,int &num_of_unitig
   }
 }
 
-void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[num_of_reads],int &num_of_unitigs,vector<vector<int> > &unitigs_info){
+void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[num_of_reads+1],int &num_of_unitigs,vector<vector<int> > &unitigs_info){
 
   int i,j,k;
   int mate_pair_distance;
@@ -702,8 +702,8 @@ void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[num_o
 	    mate_pair_distance=unis[i][k][2]-unis[i][j][2];
 
 	    if ((l_bd_mp <=mate_pair_distance ) && (u_bd_mp >=mate_pair_distance )){//two reads are distanced between 2400-3600
-	      mate_table[unis[i][j][0]]=1;mate_table[unis[i][k][0]]=1;//found mate-pair within a unitig
-	      
+		mate_table[unis[i][j][0]]=1;mate_table[unis[i][k][0]]=1;//found mate-pair within a unitig
+		mate_table[num_of_reads]+=2;
 	    }
 	  }
 	}
@@ -711,7 +711,7 @@ void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[num_o
     }
    }
 
-   /*   for (i=0;i<num_of_reads;i++){
+   /*   for (i=0;i<num_of_reads+1;i++){
      cout<<i<<"  "<<mate_table[i]<<"\n";
      }*/
 
@@ -813,7 +813,7 @@ void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vec
   a_unis[2]=0;
   contig_unis_list.push_back(a_unis);//insert the first unitig
 
-  int mate_table[num_of_reads]={0};
+  int mate_table[num_of_reads+1]={0};//count mate_pair numbers
   check_self_pairing(unis,mate_table,num_of_unitigs,unitigs_info);
 
 
