@@ -848,6 +848,13 @@ int mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<in
   return mate_pair_count;
 }
 
+// Driver function to sort the 2D vector
+// on basis of a particular column
+bool sortcol( const vector<int>& v1,
+	      const vector<int>& v2 ) {
+  return v1[3] >  v2[3];
+}
+
 int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int mate_table[num_of_reads+1]){
 
   int contig_size=(int)(contig_unis_list.size());
@@ -896,12 +903,12 @@ int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vec
     temp[1]=uni2_FR;
     temp[2]=-read_len+unitigs_con[last_uni][last_uni_FR][k][4];//distance between contig and the next unitig(negative number of course)
     temp[3]=mate_pair_count;
-
-    cout<<temp[3]<<" ";
-    
+   
     next_uni_table.push_back(temp);
 
-  }
+    sort( next_uni_table.begin(), next_uni_table.end(),sortcol);
+  }    
+
   // iterate_for_finding_a_contig(unis, unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con,contig_unis_list, mate_table);
 }
 
