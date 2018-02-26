@@ -651,31 +651,32 @@ void connected_unitigs(vector<vector<vector<int> > > &unitigs,int &num_of_unitig
 	  for (m=0;m<2;m++){
 	    for (n=0;n<unitigs_con_count[l][m+1];n++){
 	     
-	      if(equal(unitigs[i][j*unitigs_info[i][0]].begin()+k*5,unitigs[i][j*unitigs_info[i][0]].begin()+(k+1)*5,unitigs[l][m*unitigs_info[l][0]].begin()+n*5) && m!=j && unitigs[i][j*unitigs_info[i][0]][k*5]!=-1 ){
+	      if(equal(unitigs[i][j*unitigs_info[i][0]].begin()+k*5,unitigs[i][j*unitigs_info[i][0]].begin()+(k+1)*5,unitigs[l][m*unitigs_info[l][0]].begin()+n*5) && m!=j && unitigs[i][j*unitigs_info[i][0]][k*5]!=-1 ){//both forward case
+
 		temp[0]=(j*i+(1-j)*l);
 		temp[1]=1;//Forward=1, Reverse Complement=0
 		temp[2]=(j*l+(1-j)*i);
-		temp[3]=1;;//Forward=1, Reverse Complement=0
+		temp[3]=1;//Forward=1, Reverse Complement=0
 		temp[4]=unitigs[i][j*unitigs_info[i][0]][4+k*5];
 						  
 		unitigs_con[i][j].push_back(temp);
 		unitigs_con[l][m].push_back(temp);
 	      }
-	      else if (unitigs[i][j*unitigs_info[i][0]][k*5]==unitigs[l][m*unitigs_info[l][0]][2+n*5] && unitigs[i][j*unitigs_info[i][0]][1+k*5]==1-unitigs[l][m*unitigs_info[l][0]][3+n*5] && unitigs[i][j*unitigs_info[i][0]][2+k*5]==unitigs[l][m*unitigs_info[l][0]][0+n*5]  && unitigs[i][j*unitigs_info[i][0]][3+k*5]==1-unitigs[l][m*unitigs_info[l][0]][1+n*5] && unitigs[i][j*unitigs_info[i][0]][4+k*5]==unitigs[l][m*unitigs_info[l][0]][4+n*5] && m==j && unitigs[i][j*unitigs_info[i][0]][k*5]!=-1){
+	      else if (unitigs[i][j*unitigs_info[i][0]][k*5]==unitigs[l][m*unitigs_info[l][0]][2+n*5] && unitigs[i][j*unitigs_info[i][0]][1+k*5]==1-unitigs[l][m*unitigs_info[l][0]][3+n*5] && unitigs[i][j*unitigs_info[i][0]][2+k*5]==unitigs[l][m*unitigs_info[l][0]][0+n*5]  && unitigs[i][j*unitigs_info[i][0]][3+k*5]==1-unitigs[l][m*unitigs_info[l][0]][1+n*5] && unitigs[i][j*unitigs_info[i][0]][4+k*5]==unitigs[l][m*unitigs_info[l][0]][4+n*5] && m==j && unitigs[i][j*unitigs_info[i][0]][k*5]!=-1){// one forward one reverse complement case
 
 		temp[0]=(j*i+(1-j)*l);
-		temp[1]=j;;//Forward=1, Reverse Complement=0
+		temp[1]=j;//Forward=1, Reverse Complement=0
 		temp[2]=(j*l+(1-j)*i);
-		temp[3]=1-j;;//Forward=1, Reverse Complement=0
+		temp[3]=1-j;//Forward=1, Reverse Complement=0
 		temp[4]=unitigs[i][j*unitigs_info[i][0]][4+k*5];
 						  
 		unitigs_con[i][j].push_back(temp);
 
 		
 		temp[0]=(j*l+(1-j)*i);
-		temp[1]=1-j;
+		temp[1]=j;
 		temp[2]=(j*i+(1-j)*l);
-		temp[3]=j;
+		temp[3]=1-j;
 		temp[4]=unitigs[i][j*unitigs_info[i][0]][4+k*5];
 
 		unitigs_con[l][m].push_back(temp);
@@ -843,7 +844,7 @@ int mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<in
       }
     }
   }
-  
+  cout<<mate_pair_count<<"\n";
   return mate_pair_count;
 }
 
@@ -883,8 +884,10 @@ int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vec
 	distance0=distance0+unitigs_info[contig_unis_list[j+1][0]][1]+contig_unis_list[j+1][2];
     
       distance=distance0+unitigs_con[last_uni][last_uni_FR][k][4];
-  
-      if (distance<=u_bd_mp && distance>=l_bd_mp ){
+
+      if (distance<=u_bd_mp ){
+	cout<<uni1<<" "<<uni1_FR<<" "<<uni2<<" "<<uni2_FR<<" "<<distance<<  "\n";
+
 	mate_pair_count+= mate_pair_check(unis, unis_RC, unitigs_info, unitigs_con_count, mate_table, uni1, uni1_FR, uni2, uni2_FR, distance);
       }
     }
