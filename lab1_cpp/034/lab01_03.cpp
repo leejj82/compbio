@@ -719,80 +719,187 @@ void check_self_pairing(vector<vector<vector<int> > > &unis,int mate_table[num_o
    
 }
 
+/*
 void mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int mate_table[num_of_reads+1]){
 
   int i,j,k,l,m,n;
   int FB,next_uni;
   int mate_pair_count, fatal_no_mate_count,mate_pair_distance;
 
-  for (i=0;i<num_of_unitigs;i++){
-    for (j=0;j<2;j++){
-      for (k=0;k<unitigs_con_count[i][j+1];k++){
+  
+  i=contig_unis_list[(int)(contig_unis_list.size())-1][0];
+  for (j=0;j<2;j++){ 
+    for (k=0;k<unitigs_con_count[i][j+1];k++){
 	
-	FB=unitigs_con[i][j][k][(1-j) + j*3];//1= Forward or 0= Reverse complement
-	next_uni=unitigs_con[i][j][k][j*2];// the index for compared unitig
-	mate_pair_count=0;
-	fatal_no_mate_count=0;
+      FB=unitigs_con[i][j][k][(1-j) + j*3];//1= Forward or 0= Reverse complement
+      next_uni=unitigs_con[i][j][k][j*2];// the index for compared unitig
+      mate_pair_count=0;
+      fatal_no_mate_count=0;
 	
-	if(FB==1){//connected forward
-	  for (l=0;l<unitigs_info[i][0];l++){
-	    for (m=0;m<unitigs_info[next_uni][0];m++){
-	      if( ((unis[i][l][0]==unis[next_uni][m][0]+1) && (unis[next_uni][m][0]%2==0))  || ((unis[i][l][0]==unis[next_uni][m][0]-1) && (unis[next_uni][m][0]%2==1))){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
-		if(unis[i][l][1]==j && unis[next_uni][m][1]==(1-j) ){// two reads are facing each other 5'-3' 3'-5' way
+      if(FB==1){//connected forward
+	for (l=0;l<unitigs_info[i][0];l++){
+	  for (m=0;m<unitigs_info[next_uni][0];m++){
+	    if( ((unis[i][l][0]==unis[next_uni][m][0]+1) && (unis[next_uni][m][0]%2==0))  || ((unis[i][l][0]==unis[next_uni][m][0]-1) && (unis[next_uni][m][0]%2==1))){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+	      if(unis[i][l][1]==j && unis[next_uni][m][1]==(1-j) ){// two reads are facing each other 5'-3' 3'-5' way
 
-		  // cout<<unis[next_uni][m][0]<<"  " <<unis[i][l][0]<<"  ";
+		// cout<<unis[next_uni][m][0]<<"  " <<unis[i][l][0]<<"  ";
 
 
 		  
-		  mate_pair_distance=(1-j)*(unitigs_info[next_uni][1]-unis[next_uni][m][2]+unis[i][l][2])+j*(unitigs_info[i][1]-unis[i][l][2]+unis[next_uni][m][2]);
+		mate_pair_distance=(1-j)*(unitigs_info[next_uni][1]-unis[next_uni][m][2]+unis[i][l][2])+j*(unitigs_info[i][1]-unis[i][l][2]+unis[next_uni][m][2]);
 
-		  //		  cout<<mate_pair_distance<<"  ";
+		//		  cout<<mate_pair_distance<<"  ";
 
 
-		  if ((l_bd_mp <=mate_pair_distance ) && (u_bd_mp >=mate_pair_distance )){//two reads are distanced between 2400-3600
-		    mate_pair_count++;
-		  }
+		if ((l_bd_mp <=mate_pair_distance ) && (u_bd_mp >=mate_pair_distance )){//two reads are distanced between 2400-3600
+		  mate_pair_count++;
 		}
 	      }
 	    }
 	  }
 	}
-	else {//connected reverse_complement
-	  for (l=0;l<unitigs_info[i][0];l++){
-	    for (m=0;m<unitigs_info[next_uni][0];m++){
-	      if( ((unis[i][l][0]==unis_RC[next_uni][m][0]+1) && (unis_RC[next_uni][m][0]%2==0))  || ((unis[i][l][0]==unis_RC[next_uni][m][0]-1) && (unis_RC[next_uni][m][0]%2==1))){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
-		if(unis[i][l][1]==j && unis_RC[next_uni][m][1]==(1-j) ){// two reads are facing each other 5'-3' 3'-5' way
-		 
-		  mate_pair_distance=(1-j)*(unitigs_info[next_uni][1]-unis_RC[next_uni][m][2]+unis[i][l][2])+j*(unitigs_info[i][1]-unis[i][l][2]+unis_RC[next_uni][m][2]);
-		  if ((l_bd_mp <=mate_pair_distance ) && (u_bd_mp >=mate_pair_distance )){//two reads are distanced between 2400-3600
-		    mate_pair_count++;
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-	
-	//	cout<<i<<"  "<<j<<"  "<<next_uni<<"  "<<unitigs_con[i][j][k][(1-j) + j*3]<<"  "<<mate_pair_count<<"\n";
-	
       }
+      else {//connected reverse_complement
+	for (l=0;l<unitigs_info[i][0];l++){
+	  for (m=0;m<unitigs_info[next_uni][0];m++){
+	    if( ((unis[i][l][0]==unis_RC[next_uni][m][0]+1) && (unis_RC[next_uni][m][0]%2==0))  || ((unis[i][l][0]==unis_RC[next_uni][m][0]-1) && (unis_RC[next_uni][m][0]%2==1))){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+	      if(unis[i][l][1]==j && unis_RC[next_uni][m][1]==(1-j) ){// two reads are facing each other 5'-3' 3'-5' way
+		 
+		mate_pair_distance=(1-j)*(unitigs_info[next_uni][1]-unis_RC[next_uni][m][2]+unis[i][l][2])+j*(unitigs_info[i][1]-unis[i][l][2]+unis_RC[next_uni][m][2]);
+		if ((l_bd_mp <=mate_pair_distance ) && (u_bd_mp >=mate_pair_distance )){//two reads are distanced between 2400-3600
+		  mate_pair_count++;
+		}
+	      }
+	    }
+	  }
+	}
+      }
+	
+      //	cout<<i<<"  "<<j<<"  "<<next_uni<<"  "<<unitigs_con[i][j][k][(1-j) + j*3]<<"  "<<mate_pair_count<<"\n";
+	
     }
   }
 }
+*/
 
-int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con,vector<vector<int> > &contig_unis_list, int mate_table[num_of_reads+1]){
+int mate_pair_check(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC, vector<vector<int> > &unitigs_info, int unitigs_con_count[][3], int mate_table[num_of_reads+1], int uni1, int uni1_FR, int uni2, int uni2_FR, int distance){
 
-  if (mate_table[num_of_reads]!=num_of_reads){
-
-    mate_pair_check(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con,contig_unis_list, mate_table);
-    iterate_for_finding_a_contig(unis, unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con,contig_unis_list, mate_table);
-
-    return 0;
-  }
-  else {
-    return 1;
+  int i,j,mate_pair_distance;
+  int mate_pair_count=0;
+  
+  for (i=0;i<unitigs_info[uni1][0];i++){
+    for (j=0;j<unitigs_info[uni2][0];j++){
+      if (uni1_FR==1 && uni2_FR==1){
+	if( ((unis[uni1][i][0]==unis[uni2][j][0]+1) && (unis[uni2][j][0]%2==0)) || ((unis[uni1][i][0]==unis[uni2][j][0]-1) && (unis[uni2][j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+	  if(unis[uni1][i][1]==1 && unis[uni2][j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
+	  
+	    mate_pair_distance=distance+unitigs_info[uni1][1]-unis[uni1][i][2]+unis[uni2][j][2];
+	    if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) ){//two reads are distanced between 2400-3600
+	      mate_table[num_of_reads]+=2;
+	      mate_table[unis[uni1][i][0]]+=1;mate_table[unis[uni2][j][0]]+=1;
+	      mate_pair_count+=1;
+	    }	  
+	  }	  
+	}
+      }
+      else if (uni1_FR==1 && uni2_FR==0){
+	if( ((unis[uni1][i][0]==unis_RC[uni2][j][0]+1) && (unis_RC[uni2][j][0]%2==0)) || ((unis[uni1][i][0]==unis_RC[uni2][j][0]-1) && (unis_RC[uni2][j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+	  if(unis[uni1][i][1]==1 && unis_RC[uni2][j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
+	  
+	    mate_pair_distance=distance+unitigs_info[uni1][1]-unis[uni1][i][2]+unis_RC[uni2][j][2];
+	    if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) ){//two reads are distanced between 2400-3600
+	      mate_table[num_of_reads]+=2;
+	      mate_table[unis[uni1][i][0]]+=1;mate_table[unis_RC[uni2][j][0]]+=1;
+	      mate_pair_count+=1;
+	    }	  
+	  }	  
+	}
+      }   
+      else if (uni1_FR==0 && uni2_FR==1){
+	if( ((unis_RC[uni1][i][0]==unis[uni2][j][0]+1) && (unis[uni2][j][0]%2==0)) || ((unis_RC[uni1][i][0]==unis[uni2][j][0]-1) && (unis[uni2][j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+	  if(unis_RC[uni1][i][1]==1 && unis[uni2][j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
+	  
+	    mate_pair_distance=distance+unitigs_info[uni1][1]-unis_RC[uni1][i][2]+unis[uni2][j][2];
+	    if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) ){//two reads are distanced between 2400-3600
+	      mate_table[num_of_reads]+=2;
+	      mate_table[unis_RC[uni1][i][0]]+=1;mate_table[unis[uni2][j][0]]+=1;
+	      mate_pair_count+=1;
+	    }	  
+	  }	  
+	}
+      }
+      else{ //uni1_FR==0 && uni2_FR==0
+	if( ((unis_RC[uni1][i][0]==unis_RC[uni2][j][0]+1) && (unis_RC[uni2][j][0]%2==0)) || ((unis_RC[uni1][i][0]==unis_RC[uni2][j][0]-1) && (unis_RC[uni2][j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+	  if(unis_RC[uni1][i][1]==1 && unis_RC[uni2][j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
+	  
+	    mate_pair_distance=distance+unitigs_info[uni1][1]-unis_RC[uni1][i][2]+unis_RC[uni2][j][2];
+	    if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) ){//two reads are distanced between 2400-3600
+	      mate_table[num_of_reads]+=2;
+	      mate_table[unis_RC[uni1][i][0]]+=1;mate_table[unis_RC[uni2][j][0]]+=1;
+	      mate_pair_count+=1;
+	    }	  
+	  }	  
+	}
+      }
+    }
   }
   
+  return mate_pair_count;
+}
+
+int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int mate_table[num_of_reads+1]){
+
+  int contig_size=(int)(contig_unis_list.size());
+  int i,j,k;
+  int uni1,uni1_FR,uni2,uni2_FR;
+  int last_uni, last_uni_FR;
+  
+  int distance, distance0;
+  int mate_pair_count;
+  
+  vector<vector<int> > next_uni_table; //table of next possible unitigs
+
+  vector<int> temp(4);
+  
+  last_uni=contig_unis_list[contig_size-1][0];
+  last_uni_FR=contig_unis_list[contig_size-1][1];
+
+  for (k=0;k<unitigs_con_count[last_uni][last_uni_FR+1];k++){
+
+    uni2=unitigs_con[last_uni][last_uni_FR][k][last_uni_FR*2];
+    uni2_FR=last_uni_FR*unitigs_con[last_uni][last_uni_FR][k][last_uni_FR*2+1]+(1-last_uni_FR)*(1-unitigs_con[last_uni][last_uni_FR][k][last_uni_FR*2+1]);
+    mate_pair_count=0;
+    
+    for(i=0;i<contig_size;i++){
+
+      j=contig_size-i-1;
+    
+      uni1=contig_unis_list[j][0];
+      uni1_FR=contig_unis_list[j][1];
+  
+      if (i==0)
+	distance0=0;
+      else
+	distance0=distance0+unitigs_info[contig_unis_list[j+1][0]][1]+contig_unis_list[j+1][2];
+    
+      distance=distance0+unitigs_con[last_uni][last_uni_FR][k][4];
+  
+      if (distance<=u_bd_mp && distance>=l_bd_mp ){
+	mate_pair_count+= mate_pair_check(unis, unis_RC, unitigs_info, unitigs_con_count, mate_table, uni1, uni1_FR, uni2, uni2_FR, distance);
+      }
+    }
+
+    temp[0]=uni2;
+    temp[1]=uni2_FR;
+    temp[2]=-read_len+unitigs_con[last_uni][last_uni_FR][k][4];//distance between contig and the next unitig(negative number of course)
+    temp[3]=mate_pair_count;
+
+    cout<<temp[3]<<" ";
+    
+    next_uni_table.push_back(temp);
+
+  }
+  // iterate_for_finding_a_contig(unis, unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con,contig_unis_list, mate_table);
 }
 
 void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, char *contig){
@@ -811,10 +918,10 @@ void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vec
     }
   }
 
-  vector<vector<int> > contig_unis_list; //unitig #, F/B, starting pt
+  vector<vector<int> > contig_unis_list; //unitig #, F/RC, starting pt
   vector<int> a_unis(3);
   a_unis[0]=start_unitig;
-  a_unis[1]=0;
+  a_unis[1]=1;
   a_unis[2]=0;
   contig_unis_list.push_back(a_unis);//insert the first unitig
 
@@ -846,7 +953,7 @@ void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > 
 
 
 
-  /*
+#if 0
   cout<<"unitigs_info"<<"\n";
   for (i=0;i<num_of_unitigs;i++)
     {
@@ -883,7 +990,7 @@ void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > 
    for (i=0;i<unitigs_info[2][0];i++){
      cout<< unis[2][i][0]<<" "<<unis[2][i][1]<<" "<<unis[2][i][2]<<"     "<< unis_RC[2][i][0]<<" "<< unis_RC[2][i][1]<<" "<< unis_RC[2][i][2]<<"\n";
    }
-  */
+#endif
 
 
 }
