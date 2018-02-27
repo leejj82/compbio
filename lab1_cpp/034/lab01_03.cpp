@@ -849,20 +849,22 @@ bool sortcol( const vector<int>& v1,
   return v1[3] >  v2[3];
 }
 
-void check_for_validity(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int &mate_count, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads,int &indicator){
+int check_for_validity(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int &mate_count, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads,int &indicator){
 
   int i,j,k;
   int total_num_of_reads_in_contig=0;
   int FB;
   int contig_unis_len=contig_unis_list.size();
-  int sum;
+  int sum, mate_pair_distance;
+  int reads_check[num_of_reads+1]={0};
+ 
   for (i=0;i<contig_unis_len;i++){
     total_num_of_reads_in_contig+=unitigs_info[contig_unis_list[i][0]][0];
   }
 
-  int contig_reads_all[total_num_of_reads_in_contig][4];
+  int contig_reads_all[total_num_of_reads_in_contig][4]; //read#, F/RC, starting position, mate_pair yes/no 1/0
 
-
+  
   k=0;
   for (i=0;i<contig_unis_len;i++){
 
@@ -879,6 +881,7 @@ void check_for_validity(vector<vector<vector<int> > > &unis, vector<vector<vecto
 	contig_reads_all[k][0]=unis[contig_unis_list[i][0]][j][0];
 	contig_reads_all[k][1]=unis[contig_unis_list[i][0]][j][1];
 	contig_reads_all[k][2]=unis[contig_unis_list[i][0]][j][2]+sum;
+	contig_reads_all[k][3]=0;
 	k++;
       }
     }
@@ -887,57 +890,117 @@ void check_for_validity(vector<vector<vector<int> > > &unis, vector<vector<vecto
 	contig_reads_all[k][0]=unis_RC[contig_unis_list[i][0]][j][0];
 	contig_reads_all[k][1]=unis_RC[contig_unis_list[i][0]][j][1];
 	contig_reads_all[k][2]=unis_RC[contig_unis_list[i][0]][j][2]+sum;
+	contig_reads_all[k][3]=0;	
 	k++;
       }
     }
   }  
-
-#if 1
-  FILE * pFile;
-  pFile = fopen ("lab01.temp","w");
-
-  for (i=0;i<contig_unis_len;i++){
-    fprintf (pFile, "%*d  ",4,contig_unis_list[i][0]);
-  }
-
-  fprintf (pFile, "\n ");
-  fprintf (pFile, "\n ");
-
-
-
-  for (i=0;i<total_num_of_reads_in_contig;i++){
-    fprintf (pFile, "%*d  ",4,i);
-     
-    for (j=0;j<4;j++){
-      fprintf (pFile, "%*d  ",4,contig_reads_all[i][j]);
+  /*
+  for (i=0;i<total_num_of_reads_in_contig-1;i++){
+    for (j=i+1;j<total_num_of_reads_in_contig;j++){
+      if( ((contig_reads_all[i][0]==contig_reads_all[j][0]+1) && (contig_reads_all[j][0]%2==0)) || ((contig_reads_all[i][0]==contig_reads_all[j][0]-1) && (contig_reads_all[j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+	if(contig_reads_all[i][1]==1 && contig_reads_all[j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
+	  mate_pair_distance=contig_reads_all[j][2]-contig_reads_all[i][2];      
+	  if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) &&( contig_reads_all[i][3]==0 && contig_reads_all[j][3]==0) ){//two reads are distanced between 2400-3600 and not used
+	    contig_reads_all[i][3]=1;contig_reads_all[j][3]=1;
+	    if (reads_check[i]==0 && reads_check[j]==0){
+	      reads_check[i]=1;reads_check[j]=1;reads_check[num_of_reads]+=2;
+	    }
+	  }
+	}
+      }  
     }
-    fprintf (pFile, "\n ");
   }
-  fprintf (pFile, "\n\n");
-  fclose (pFile);
 
-  pFile = fopen ("lab01.temp2","w");
+  
+int temp1,temp2;
 
-  for (i=0;i<unis.size();i++){
-   
-    for (j=0;j<unis[i].size();j++){
-
-      for (k=0;k<unis[i][j].size();k++){
-	fprintf (pFile, "%*d  ",4,unis[i][j][k]);
-      }
-
-      for (k=0;k<unis_RC[i][j].size();k++){
-	fprintf (pFile, "%*d  ",4,unis_RC[i][j][k]);
-      }
-      
-      fprintf (pFile, "\n ");
-    } 
-    fprintf (pFile, "\n\n"); 
-  }
+ for (i=0;i<total_num_of_reads_in_contig;i++){
+   if( contig_reads_all[i][3]==0){
+     for (j=1;j<i+1;j++){
+       if ((contig_reads_all[i-j][3]==1) && ((contig_reads_all[i][2]-contig_reads_all[i-j][2])<read_len) ){
+	 temp1=i-j;
+	 break;
+       }
+       else if( (contig_reads_all[i][2]-contig_reads_all[i-j][2])>=read_len){
+	 indicator=-1;
+	 return 0;
+       }
+     }
+     for (k=i+1;k<total_num_of_reads_in_contig;k++){
+       if (contig_reads_all[k][3]==1 && (contig_reads_all[k][2]-contig_reads_all[i][2])<read_len){
+	 temp2=k;
+	 break;
+       }
+       else if( (contig_reads_all[k][2]-contig_reads_all[i][2])>=read_len){
+	 indicator=-1;
+	 return 0;
+       }
+     }
+     if( contig_reads_all[temp2][2]-contig_reads_all[temp1][2]>=read_len){
+       indicator=-1;
+       return 0;
+     }
+   }
+ }
  
-  fclose (pFile);
+ 
+ if (reads_check[num_of_reads]==300){
+   indicator=1;
+   return 0;
+ }
+ else {
+   indicator=0;
+   return 0;
+ }
+ */
+	 
+#if 0
+ FILE * pFile;
+    pFile = fopen ("lab01.temp","w");
+
+    for (i=0;i<contig_unis_len;i++){
+      fprintf (pFile, "%*d  ",4,contig_unis_list[i][0]);
+    }
+
+    fprintf (pFile, "\n ");
+    fprintf (pFile, "\n ");
+
+
+
+    for (i=0;i<total_num_of_reads_in_contig;i++){
+      fprintf (pFile, "%*d  ",4,i);
+     
+      for (j=0;j<4;j++){
+	fprintf (pFile, "%*d  ",4,contig_reads_all[i][j]);
+      }
+      fprintf (pFile, "\n ");
+    }
+    fprintf (pFile, "\n\n");
+    fclose (pFile);
+
+    pFile = fopen ("lab01.temp2","w");
+
+    for (i=0;i<unis.size();i++){
+   
+      for (j=0;j<unis[i].size();j++){
+
+	for (k=0;k<unis[i][j].size();k++){
+	  fprintf (pFile, "%*d  ",4,unis[i][j][k]);
+	}
+
+	for (k=0;k<unis_RC[i][j].size();k++){
+	  fprintf (pFile, "%*d  ",4,unis_RC[i][j][k]);
+	}
+      
+	fprintf (pFile, "\n ");
+      } 
+      fprintf (pFile, "\n\n"); 
+    }
+ 
+    fclose (pFile);
 #endif
-}  
+}
 
 
 
