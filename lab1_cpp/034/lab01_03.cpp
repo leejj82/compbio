@@ -638,7 +638,7 @@ void setup_unis(vector<vector<vector<int> > > &unitigs,vector<vector<vector<int>
       unis_RC[i][j][2]=unis_RC[i][j-1][2]+unitigs[i][unitigs_info[i][0]-j][4];
     }
  
-   unis[i][unitigs_info[i][0]-1][0]=unitigs[i][unitigs_info[i][0]-1][2];
+    unis[i][unitigs_info[i][0]-1][0]=unitigs[i][unitigs_info[i][0]-1][2];
     unis[i][unitigs_info[i][0]-1][1]=unitigs[i][unitigs_info[i][0]-1][3];
     unis[i][unitigs_info[i][0]-1][2]=unis[i][unitigs_info[i][0]-2][2]+unitigs[i][unitigs_info[i][0]-1][4];
 
@@ -895,16 +895,17 @@ int check_for_validity(vector<vector<vector<int> > > &unis, vector<vector<vector
       }
     }
   }  
-  /*
+ 
   for (i=0;i<total_num_of_reads_in_contig-1;i++){
     for (j=i+1;j<total_num_of_reads_in_contig;j++){
+
       if( ((contig_reads_all[i][0]==contig_reads_all[j][0]+1) && (contig_reads_all[j][0]%2==0)) || ((contig_reads_all[i][0]==contig_reads_all[j][0]-1) && (contig_reads_all[j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
 	if(contig_reads_all[i][1]==1 && contig_reads_all[j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
 	  mate_pair_distance=contig_reads_all[j][2]-contig_reads_all[i][2];      
 	  if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) &&( contig_reads_all[i][3]==0 && contig_reads_all[j][3]==0) ){//two reads are distanced between 2400-3600 and not used
 	    contig_reads_all[i][3]=1;contig_reads_all[j][3]=1;
-	    if (reads_check[i]==0 && reads_check[j]==0){
-	      reads_check[i]=1;reads_check[j]=1;reads_check[num_of_reads]+=2;
+	    if ( reads_check[contig_reads_all[i][0]]==0 && reads_check[contig_reads_all[j][0]]==0){
+	      reads_check[contig_reads_all[i][0]]=1;reads_check[contig_reads_all[j][0]]=1;reads_check[num_of_reads]+=2;
 	    }
 	  }
 	}
@@ -953,7 +954,7 @@ int temp1,temp2;
    indicator=0;
    return 0;
  }
- */
+
 	 
 #if 0
  FILE * pFile;
@@ -1086,21 +1087,23 @@ int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vec
       }
     }
     //end of reuse
-    
-    if (mate_count_2==150 && indicator==0){
-      check_for_validity(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads, indicator);
-      if(indicator!=0){
-	return 0;
+
+    if (contig_unis_list_2.size()<=15){
+      if (mate_count_2==150 && indicator==0){
+	check_for_validity(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads, indicator);
+	if(indicator!=0){
+	  return 0;
+	}
+	else {
+	  iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads,indicator);
+	}
       }
-      else {
+      else if(indicator==0){
 	iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads,indicator);
       }
-    }
-    else if(indicator==0){
-      iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads,indicator);
-    }
-    else{//indicator=1/-1
-      return 0;
+      else{//indicator=1/-1
+	return 0;
+      }
     }
   }
 }
