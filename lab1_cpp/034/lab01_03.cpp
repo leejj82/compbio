@@ -628,7 +628,7 @@ void setup_unis(vector<vector<vector<int> > > &unitigs,vector<vector<vector<int>
     unis_RC[i][0][1]=1-unitigs[i][unitigs_info[i][0]-1][3];
     unis_RC[i][0][2]=0;
   
-    for (j=1;j<unitigs_info[i][0];j++){     
+    for (j=1;j<unitigs_info[i][0]-1;j++){     
       unis[i][j][0]=unitigs[i][j][2];
       unis[i][j][1]=unitigs[i][j][3];
       unis[i][j][2]=unis[i][j-1][2]+unitigs[i][j][4];
@@ -637,6 +637,15 @@ void setup_unis(vector<vector<vector<int> > > &unitigs,vector<vector<vector<int>
       unis_RC[i][j][1]=1-unitigs[i][unitigs_info[i][0]-1-j][3];
       unis_RC[i][j][2]=unis_RC[i][j-1][2]+unitigs[i][unitigs_info[i][0]-j][4];
     }
+ 
+   unis[i][unitigs_info[i][0]-1][0]=unitigs[i][unitigs_info[i][0]-1][2];
+    unis[i][unitigs_info[i][0]-1][1]=unitigs[i][unitigs_info[i][0]-1][3];
+    unis[i][unitigs_info[i][0]-1][2]=unis[i][unitigs_info[i][0]-2][2]+unitigs[i][unitigs_info[i][0]-1][4];
+
+    unis_RC[i][unitigs_info[i][0]-1][0]=unitigs[i][1][0];
+    unis_RC[i][unitigs_info[i][0]-1][1]=1-unitigs[i][1][1];
+    unis_RC[i][unitigs_info[i][0]-1][2]=unis_RC[i][unitigs_info[i][0]-2][2]+unitigs[i][1][4];
+  
   }
 }
  
@@ -844,12 +853,91 @@ void check_for_validity(vector<vector<vector<int> > > &unis, vector<vector<vecto
 
   int i,j,k;
   int total_num_of_reads_in_contig=0;
-
-  for (i=0;i<contig_unis_list.size();i++){
-    total_num_of_reads_in_contig+=unitigs_info[contig_unis_list[i][0]][1];
+  int FB;
+  int contig_unis_len=contig_unis_list.size();
+  int sum;
+  for (i=0;i<contig_unis_len;i++){
+    total_num_of_reads_in_contig+=unitigs_info[contig_unis_list[i][0]][0];
   }
-}
-  
+
+  int contig_reads_all[total_num_of_reads_in_contig][4];
+
+
+  k=0;
+  for (i=0;i<contig_unis_len;i++){
+
+    FB=contig_unis_list[i][1];
+    if (i==0)
+      sum=0;
+    else{
+      sum=sum+unitigs_info[contig_unis_list[i-1][0]][1]+contig_unis_list[i][2];
+    }
+
+
+    if (FB==1){//front unitig
+      for (j=0;j<unitigs_info[contig_unis_list[i][0]][0];j++){
+	contig_reads_all[k][0]=unis[contig_unis_list[i][0]][j][0];
+	contig_reads_all[k][1]=unis[contig_unis_list[i][0]][j][1];
+	contig_reads_all[k][2]=unis[contig_unis_list[i][0]][j][2]+sum;
+	k++;
+      }
+    }
+    else{ //reverse complement unitig
+      for (j=0;j<unitigs_info[contig_unis_list[i][0]][0];j++){
+	contig_reads_all[k][0]=unis_RC[contig_unis_list[i][0]][j][0];
+	contig_reads_all[k][1]=unis_RC[contig_unis_list[i][0]][j][1];
+	contig_reads_all[k][2]=unis_RC[contig_unis_list[i][0]][j][2]+sum;
+	k++;
+      }
+    }
+  }  
+
+#if 1
+  FILE * pFile;
+  pFile = fopen ("lab01.temp","w");
+
+  for (i=0;i<contig_unis_len;i++){
+    fprintf (pFile, "%*d  ",4,contig_unis_list[i][0]);
+  }
+
+  fprintf (pFile, "\n ");
+  fprintf (pFile, "\n ");
+
+
+
+  for (i=0;i<total_num_of_reads_in_contig;i++){
+    fprintf (pFile, "%*d  ",4,i);
+     
+    for (j=0;j<4;j++){
+      fprintf (pFile, "%*d  ",4,contig_reads_all[i][j]);
+    }
+    fprintf (pFile, "\n ");
+  }
+  fprintf (pFile, "\n\n");
+  fclose (pFile);
+
+  pFile = fopen ("lab01.temp2","w");
+
+  for (i=0;i<unis.size();i++){
+   
+    for (j=0;j<unis[i].size();j++){
+
+      for (k=0;k<unis[i][j].size();k++){
+	fprintf (pFile, "%*d  ",4,unis[i][j][k]);
+      }
+
+      for (k=0;k<unis_RC[i][j].size();k++){
+	fprintf (pFile, "%*d  ",4,unis_RC[i][j][k]);
+      }
+      
+      fprintf (pFile, "\n ");
+    } 
+    fprintf (pFile, "\n\n"); 
+  }
+ 
+  fclose (pFile);
+#endif
+}  
 
 
 
@@ -936,17 +1024,17 @@ int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vec
     }
     //end of reuse
     
-    if (mate_count_2>=150 && indicator==0){
-      check_for_validity(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, indicator);
+    if (mate_count_2==150 && indicator==0){
+      check_for_validity(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads, indicator);
       if(indicator!=0){
 	return 0;
       }
       else {
-	iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2,indicator);
+	iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads,indicator);
       }
     }
     else if(indicator==0){
-      iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2,indicator);
+      iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads,indicator);
     }
     else{//indicator=1/-1
       return 0;
@@ -980,7 +1068,7 @@ void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vec
   int mate_count=0;;//count mate_pair numbers
   check_self_pairing(unis,mate_count,num_of_unitigs,unitigs_info);
   
-  iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs, unitigs_info, unitigs_con_count, unitigs_con,contig_unis_list,mate_count,indicator);
+  iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs, unitigs_info, unitigs_con_count, unitigs_con,contig_unis_list,mate_count, real_contig_unis_list, contig_reads,indicator);
 
 }
 
