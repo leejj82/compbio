@@ -849,7 +849,7 @@ bool sortcol( const vector<int>& v1,
   return v1[3] >  v2[3];
 }
 
-int check_for_validity(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int &mate_count, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads,int &indicator){
+int check_for_validity(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int &mate_count, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads){
 
   int i,j,k;
   int total_num_of_reads_in_contig=0;
@@ -924,8 +924,7 @@ int temp1,temp2;
 	 break;
        }
        else if( (contig_reads_all[i][2]-contig_reads_all[i-j][2])>=read_len){
-	 indicator=-1;
-	 return 0;
+	 return -1;
        }
      }
      for (k=i+1;k<total_num_of_reads_in_contig;k++){
@@ -934,24 +933,20 @@ int temp1,temp2;
 	 break;
        }
        else if( (contig_reads_all[k][2]-contig_reads_all[i][2])>=read_len){
-	 indicator=-1;
-	 return 0;
+	 return -1;
        }
      }
      if( contig_reads_all[temp2][2]-contig_reads_all[temp1][2]>=read_len){
-       indicator=-1;
-       return 0;
+            return -1;
      }
    }
  }
  
  
  if (reads_check[num_of_reads]==300){
-   indicator=1;
-   return 0;
+   return 1;
  }
  else {
-   indicator=0;
    return 0;
  }
 
@@ -1003,12 +998,7 @@ int temp1,temp2;
 #endif
 }
 
-
-
-
-
-
-int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int &mate_count, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads,int &indicator){
+int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int &mate_count, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads){
   
   int contig_size=(int)(contig_unis_list.size());
   int i,j,k;
@@ -1017,7 +1007,7 @@ int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vec
   
   int distance, distance0;
   int mate_pair_count;
-
+  int result1, result2;
   
   
   vector<vector<int> > next_uni_table; //table of next possible unitigs
@@ -1088,29 +1078,26 @@ int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vec
     }
     //end of reuse
 
-    if (contig_unis_list_2.size()<=15){
-      if (mate_count_2==150 && indicator==0){
-	check_for_validity(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads, indicator);
-	if(indicator!=0){
-	  return 0;
-	}
-	else {
-	  iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads,indicator);
-	}
+   
+    result1=check_for_validity(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads);
+    
+    if(result1==0){
+      result2=iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads);
+      if (result2==1){
+	cout<<result2<<" ";
+	return result2;
       }
-      else if(indicator==0){
-	iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads,indicator);
-      }
-      else{//indicator=1/-1
-	return 0;
-      }
+    }
+    else if (result1==1){
+	cout<<result1<<" ";
+      return result1;
     }
   }
 }
 
 void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, char *contig, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads){
     
-  int i,start_unitig=0,indicator=0;
+  int i,start_unitig=0;
   
   for (i=0;i<num_of_unitigs;i++){//if an end of a unitig does not have a connecting edges, then the unitig can be a boundary of a contig
     if(unitigs_con_count[i][1]==0 || unitigs_con_count[i][2]==0){
@@ -1134,8 +1121,9 @@ void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vec
   int mate_count=0;;//count mate_pair numbers
   check_self_pairing(unis,mate_count,num_of_unitigs,unitigs_info);
   
-  iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs, unitigs_info, unitigs_con_count, unitigs_con,contig_unis_list,mate_count, real_contig_unis_list, contig_reads,indicator);
+  int result=iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs, unitigs_info, unitigs_con_count, unitigs_con,contig_unis_list,mate_count, real_contig_unis_list, contig_reads);
 
+  cout<<result<<"\n";
 }
 
 void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info, char *contig, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads){
