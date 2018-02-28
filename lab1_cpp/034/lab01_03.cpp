@@ -782,64 +782,6 @@ int mate_pair_check_1(vector<vector<vector<int> > > &unis, vector<vector<vector<
   return mate_pair_count;
 }
 
-void mate_pair_check_2(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC, vector<vector<int> > &unitigs_info, int unitigs_con_count[][3], int &mate_count, int uni1, int uni1_FR, int uni2, int uni2_FR, int distance){
-
-  int i,j,mate_pair_distance;
-   
-  
-  for (i=0;i<unitigs_info[uni1][0];i++){
-    for (j=0;j<unitigs_info[uni2][0];j++){
-
-      if (uni1_FR==1 && uni2_FR==1){	
-	if( ((unis[uni1][i][0]==unis[uni2][j][0]+1) && (unis[uni2][j][0]%2==0)) || ((unis[uni1][i][0]==unis[uni2][j][0]-1) && (unis[uni2][j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
-	  if(unis[uni1][i][1]==1 && unis[uni2][j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
-	    mate_pair_distance=distance+unitigs_info[uni1][1]-unis[uni1][i][2]+unis[uni2][j][2];
-	    if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) ){//two reads are distanced between 2400-3600	      
-	      mate_count++;
-	    }	  
-	  }	  
-	}
-      }
-
-      else if (uni1_FR==1 && uni2_FR==0){
-	if( ((unis[uni1][i][0]==unis_RC[uni2][j][0]+1) && (unis_RC[uni2][j][0]%2==0)) || ((unis[uni1][i][0]==unis_RC[uni2][j][0]-1) && (unis_RC[uni2][j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
-	  if(unis[uni1][i][1]==1 && unis_RC[uni2][j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
-	    
-	    mate_pair_distance=distance+unitigs_info[uni1][1]-unis[uni1][i][2]+unis_RC[uni2][j][2]; 
-	    if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) ){//two reads are distanced between 2400-3600
-	      mate_count++;
-	    }	  
-	  }	  
-	}
-      }   
-
-      else if (uni1_FR==0 && uni2_FR==1){
-	if( ((unis_RC[uni1][i][0]==unis[uni2][j][0]+1) && (unis[uni2][j][0]%2==0)) || ((unis_RC[uni1][i][0]==unis[uni2][j][0]-1) && (unis[uni2][j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
-	  if(unis_RC[uni1][i][1]==1 && unis[uni2][j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
-	  
-	    mate_pair_distance=distance+unitigs_info[uni1][1]-unis_RC[uni1][i][2]+unis[uni2][j][2];
-	    if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) ){//two reads are distanced between 2400-3600
-	      mate_count++;
-	    }	  
-	  }	  
-	}
-      }
-
-      else{ //uni1_FR==0 && uni2_FR==0
-	if( ((unis_RC[uni1][i][0]==unis_RC[uni2][j][0]+1) && (unis_RC[uni2][j][0]%2==0)) || ((unis_RC[uni1][i][0]==unis_RC[uni2][j][0]-1) && (unis_RC[uni2][j][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
-	  if(unis_RC[uni1][i][1]==1 && unis_RC[uni2][j][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
-
-	    mate_pair_distance=distance+unitigs_info[uni1][1]-unis_RC[uni1][i][2]+unis_RC[uni2][j][2];
-	    if ( (l_bd_mp <=mate_pair_distance) && (u_bd_mp >=mate_pair_distance) ){//two reads are distanced between 2400-3600
-	      mate_count++;
-	    }	  
-	  }	  
-	}
-      }
-    }
-  }
-}
-
 // Driver function to sort the 2D vector
 // on basis of a particular column
 bool sortcol( const vector<int>& v1,
@@ -1075,7 +1017,6 @@ int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vec
     temp[1]=uni2_FR;
     temp[2]=-read_len+unitigs_con[last_uni][last_uni_FR][k][4];//distance between contig and the next unitig(negative number of course)
     temp[3]=mate_pair_count;
-   
     next_uni_table.push_back(temp);
 
   }    
@@ -1085,28 +1026,7 @@ int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vec
   for(i=0;i<next_uni_table.size();i++){
     vector<vector<int> > contig_unis_list_2=contig_unis_list;
     contig_unis_list_2.push_back(next_uni_table[i]);
-    int mate_count_2=mate_count;
-    
-    //reuse the code for making make_count_2
-    uni2=next_uni_table[i][0];
-    uni2_FR=next_uni_table[i][1];
-     
-    for(k=0;k<contig_size;k++){
-      j=contig_size-k-1;  
-      uni1=contig_unis_list[j][0];
-      uni1_FR=contig_unis_list[j][1];
-      if (k==0)
-	distance0=-read_len;
-      else
-	distance0=distance0+unitigs_info[contig_unis_list[j+1][0]][1]+contig_unis_list[j+1][2];
-      distance=distance0+read_len+next_uni_table[i][2];
-      if (distance<=u_bd_mp ){
-	mate_pair_check_2(unis, unis_RC, unitigs_info, unitigs_con_count, mate_count_2, uni1, uni1_FR, uni2, uni2_FR, distance);
-      }
-    }
-    //end of reuse
-
-   
+    int mate_count_2=mate_count+next_uni_table[i][3];
     result1=check_for_validity(unis, unis_RC, num_of_unitigs,unitigs_info,unitigs_con_count, unitigs_con, contig_unis_list_2, mate_count_2, real_contig_unis_list, contig_reads);
     
     if(result1==0){
