@@ -1239,7 +1239,6 @@ int main(){
 
   vector<vector<int> > real_contig_unis_list; //unitig #, F/RC, starting pt
   vector<vector<int> > contig_reads;//read#, F/RC, starting pt
-  
   find_a_contig(unitigs,unitigs_info,real_contig_unis_list, contig_reads);
   
   char contig[contig_reads[num_of_reads-1][2]+read_len+1];
@@ -1271,8 +1270,3 @@ int main(){
   
 return 0;
 }
-
-
-
-
- 
