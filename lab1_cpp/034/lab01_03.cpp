@@ -1176,9 +1176,6 @@ void record_and_print_a_contig(char *contig, int extra[][2], vector<vector<int> 
     }
   }
 
-
-  
-
   FILE * pFile;
 
   pFile = fopen ("lab01.contig","w");
