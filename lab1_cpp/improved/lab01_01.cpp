@@ -96,18 +96,15 @@ void read_from_fasta(READ list_of_reads[num_of_reads]){
   ifstream infile("lab01.fasta");
 #endif
 
-  if (infile.is_open()) {
-    while (infile >> str)
-      {
-	if (str[0]=='>')
-	  {
-	    i=atoi(str+1)-1;
-	  }
-	else
-	  {
-	    strcat(list_of_reads[i].read,str);
-	  }
+  if (infile.is_open()){
+    while (infile >> str){
+      if (str[0]=='>'){
+	i=atoi(str+1)-1;
       }
+      else{
+	strcat(list_of_reads[i].read,str);
+      }
+    }
   }
   infile.close();
 }
@@ -162,7 +159,8 @@ bool KMP_search(char *first_read, read_end_piece &first_read_piece, char *second
 
   while (i < read_len){
     if (first_read_piece.end[matched_len] == second_read[i]){
-      i++;matched_len++;
+      i++;
+      matched_len++;
     }
     else if (matched_len==0)
       i++;

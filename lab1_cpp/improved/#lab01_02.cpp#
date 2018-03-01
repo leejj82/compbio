@@ -38,11 +38,10 @@ class edge {
   edge_b olap_f, olap_rc;
   int offset;//how read 1 is ahead of read 2
   bool deleted;//deleted=1 if deleted edge
-  left_to_right_align();//realign edges so that the direction is in the right
-  set_rc();
+  left_to_right_align_and_set_rc(); //change the directions of edges to left to right and set up reverse_complement edge
 };
 
-void edges::left_to_right_align(){
+void edges::left_to_right_align_and_set_rc(){
   if (offset<0){
     
   }
