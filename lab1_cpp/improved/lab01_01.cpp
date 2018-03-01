@@ -18,6 +18,11 @@ const int num_of_reads = 300;
 const int read_len = 500;
 #endif
 
+
+//
+//HW1 codes for finding overlapss start here
+//
+
 class READ{
 public:
   char read[read_len+1]; //read
@@ -57,6 +62,29 @@ public:
   vector<olap> list;
 };
 
+class read_end_piece{
+public:
+  char end[41];
+  int failure[40];
+  bool location;
+  read_end_piece();
+};
+
+read_end_piece::read_end_piece () {
+  end[40]='\0';
+}
+
+class read_ends{
+public:
+  read_end_piece right, left;
+  read_ends();
+};
+
+read_ends::read_ends () {
+  right.location=0;
+  left.location=1;
+}
+
 void read_from_fasta(READ list_of_reads[num_of_reads]){
 
   char str[read_len];
@@ -90,61 +118,61 @@ void reverse_complement(READ list_of_reads[num_of_reads]){
   }
 }
 
-void KMP_table(char *pat,int *failure){
+void KMP_table(read_end_piece &piece){
 
   int cnd;
-  failure[0] = -1;
+  piece.failure[0] = -1;
 
   for (int pos=1;pos < 40;pos++){
-    cnd=failure[pos-1];
+    cnd=piece.failure[pos-1];
 
-    while((pat[pos]!=pat[cnd+1]) && (cnd>=0)){
-      cnd=failure[cnd];
+    while((piece.end[pos]!=piece.end[cnd+1]) && (cnd>=0)){
+      cnd=piece.failure[cnd];
     }
 
-    if (pat[pos]==pat[cnd+1]){
-      failure[pos]=cnd+1;
+    if (piece.end[pos]==piece.end[cnd+1]){
+      piece.failure[pos]=cnd+1;
     }
     else {
-      failure[pos]=-1;
+      piece.failure[pos]=-1;
     }
   }
 }
 
-bool check_rest(int LEFT, int match_start, int match_end, char *list_original, char *list_compare){
+bool check_rest(bool LEFT, int match_start, int match_end, char *first_read, char *second_read){
   int i;
   if (LEFT){//left
     for(i=match_end+1;i<read_len;i++){
-      if (list_original[i-match_start]!=list_compare[i])
+      if (first_read[i-match_start]!=second_read[i])
 	return 0;
     }
   }
   else {//right
     for (i=0;i<match_start;i++){
-      if (list_original[read_len-match_end+i-1]!=list_compare[i])
+      if (first_read[read_len-match_end+i-1]!=second_read[i])
 	return 0;
     }
   }
   return 1;
 }
 
-bool KMP_search(char *list_original, char *pat, bool LEFT, char *list_compare, int *failure, int *Overlap){
+bool KMP_search(char *first_read, read_end_piece &first_read_piece, char *second_read, olap &Olap){
 
   int i=0,j,matched_len=0, match_start,match_end;
 
   while (i < read_len){
-    if (pat[matched_len] == list_compare[i]){
+    if (first_read_piece.end[matched_len] == second_read[i]){
       i++;matched_len++;
     }
     else if (matched_len==0)
       i++;
     else
-      matched_len=failure[matched_len-1]+1;
+      matched_len=first_read_piece.failure[matched_len-1]+1;
     if (matched_len==40){
       match_start=i-40;
       match_end=i-1;
-      if (check_rest(LEFT, match_start,match_end,list_original,list_compare)){
-	*Overlap=-LEFT*match_start+(1-LEFT)*(read_len-match_end-1);
+      if (check_rest(first_read_piece.location, match_start,match_end,first_read,second_read)){
+	Olap.offset=-first_read_piece.location*match_start+(1-first_read_piece.location)*(read_len-match_end-1);
 	return 0;
       }
     }
@@ -152,23 +180,22 @@ bool KMP_search(char *list_original, char *pat, bool LEFT, char *list_compare, i
   return 1;
 }
 
-bool find_overlaps_of_two_reads(char list_original[read_len + 1], char list_compare[read_len + 1], char list_compare_rc[read_len+1],int *Forward_Backward,int *Overlap, int * failure_R, int * failure_L, char * right_end, char * left_end){
+bool find_overlaps_of_two_reads(READ &first, READ &second,olap &Olap, read_ends &Read_ends){
 
-  bool LEFT=1;
   bool not_found=1;
 
   if (not_found){ 
-    not_found=KMP_search(list_original, right_end, !LEFT, list_compare, failure_R, Overlap);
-    *Forward_Backward=1;
+    not_found=KMP_search(first.read, Read_ends.right, second.read, Olap);
+    Olap.ori=1;
     if (not_found){
-      not_found=KMP_search(list_original, right_end, !LEFT, list_compare_rc, failure_R, Overlap);
-       *Forward_Backward=0;
+      not_found=KMP_search(first.read, Read_ends.right, second.read_rc, Olap);
+      Olap.ori=0;
       if (not_found){
-	not_found=KMP_search(list_original, left_end, LEFT, list_compare, failure_L, Overlap);
-	 *Forward_Backward=1;
+	not_found=KMP_search(first.read, Read_ends.left, second.read, Olap);
+	Olap.ori=1;
 	if (not_found){
-	  not_found=KMP_search(list_original, left_end, LEFT, list_compare_rc, failure_L, Overlap);
-	   *Forward_Backward=0;
+	  not_found=KMP_search(first.read, Read_ends.left, second.read_rc, Olap);
+	  Olap.ori=0;
 	}
       }
     }
@@ -178,36 +205,26 @@ bool find_overlaps_of_two_reads(char list_original[read_len + 1], char list_comp
 
 void find_olaps(READ list_of_reads[num_of_reads], olaps &list_of_olaps){
 
-  int i, j;
-  int Forward_Backward[1], Overlap[1];
-  
-  char right_end[41];
-  char left_end[41];
-
-  int failure_R[40];
-  int failure_L[40];
-
-  olap temp;
+  int first_read, second_read;
+  olap Olap;
+  read_ends Read_ends;
   
   list_of_olaps.size=0;
   
-  for (i=0;i<num_of_reads-1;i++){
+  for (first_read=0;first_read<num_of_reads-1;first_read++){
 
-    strncpy(right_end, list_of_reads[i].read+read_len-40,40);
-    strncpy(left_end, list_of_reads[i].read,40);
-    right_end[40]='\0';
-    left_end[40]='\0';
-    KMP_table(right_end, failure_R);
-    KMP_table(left_end, failure_L);    	
+    strncpy(Read_ends.right.end, list_of_reads[first_read].read+read_len-40,40);
+    KMP_table(Read_ends.right);
 
-    for (j=i+1;j<num_of_reads;j++){
-      if (find_overlaps_of_two_reads(list_of_reads[i].read,list_of_reads[j].read,list_of_reads[j].read_rc,Forward_Backward,Overlap,failure_R, failure_L,right_end,left_end)){
-	temp.from_read=i;
-	temp.to_read=j;
-	temp.ori=*Forward_Backward;
-	temp.offset=*Overlap;
+    strncpy(Read_ends.left.end, list_of_reads[first_read].read,40);
+    KMP_table(Read_ends.left);    	
+
+    for (second_read=first_read+1;second_read<num_of_reads;second_read++){
+      Olap.from_read=first_read;
+      Olap.to_read=second_read;
+      if (find_overlaps_of_two_reads(list_of_reads[first_read],list_of_reads[second_read],Olap,Read_ends)){
 	list_of_olaps.size++;
-	list_of_olaps.list.push_back(temp);
+	list_of_olaps.list.push_back(Olap);
       }
     }
   }
@@ -217,11 +234,11 @@ void print_olaps(olaps &list_of_olaps){
 
   FILE * pFile;
 
-  #if SAMPLE
+#if SAMPLE
   pFile = fopen ("sample.olaps","w");
-  #else
+#else
   pFile = fopen ("lab01.olaps","w");
-  #endif
+#endif
 
   for (int i=0;i<list_of_olaps.size;i++){
     fprintf (pFile, " %03d  ",list_of_olaps.list[i].from_read+1);
@@ -237,17 +254,24 @@ void print_olaps(olaps &list_of_olaps){
 }
 
 void find_and_print_olaps(READ list_of_reads[num_of_reads], olaps &list_of_olaps){
+
   read_from_fasta(list_of_reads); 
   reverse_complement(list_of_reads);
   find_olaps(list_of_reads,list_of_olaps);
   print_olaps(list_of_olaps);
 }
 
+//
+//HW1 codes for finding overlaps end here
+//
+
 int main(){
 
+
+  //HW1 finds overlaps
   READ list_of_reads[num_of_reads];
   olaps list_of_olaps;  
   find_and_print_olaps(list_of_reads,list_of_olaps);
-
+  //HW1 ends
   return 0;
 }

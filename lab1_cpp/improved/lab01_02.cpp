@@ -7,11 +7,21 @@
 #include<fstream>
 #include<string>
 #include<vector>
-#include<list>
 
 using namespace std;
 
- 
+//
+//HW2 codes for finding unitigs start here
+//
+
+
+//
+//HW2 codes for finding unitigs end here
+//
+
+  //HW2 finds unitigs
+  //HW2 ends
+
 
 #if SAMPLE
 const int num_of_reads = 10;
