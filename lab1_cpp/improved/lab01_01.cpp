@@ -23,19 +23,19 @@ const int read_len = 500;
 //HW1 codes for finding overlapss start here
 //
 
-class READ{
+class read_raw{
 public:
   char read[read_len+1]; //read
   char read_rc[read_len+1]; //reverse complement of the read
-  READ();
+  read_raw();
   void reverse_complement();
 };
 
-READ::READ () {
+read_raw::read_raw () {
   read[0]='\0';
 }
 
-void READ::reverse_complement(){
+void read_raw::reverse_complement(){
   for (int i=0;i<read_len;i++){
     if (read[read_len-i-1]=='a')
       read_rc[i]='t';
@@ -85,7 +85,7 @@ read_ends::read_ends () {
   left.location=1;
 }
 
-void read_from_fasta(READ list_of_reads[num_of_reads]){
+void read_from_fasta(read_raw list_of_reads[num_of_reads]){
 
   char str[read_len];
   int i=0;
@@ -109,7 +109,7 @@ void read_from_fasta(READ list_of_reads[num_of_reads]){
   infile.close();
 }
 
-void reverse_complement(READ list_of_reads[num_of_reads]){
+void reverse_complement(read_raw list_of_reads[num_of_reads]){
   for (int i=0;i<num_of_reads;i++){
     list_of_reads[i].reverse_complement();
   }
@@ -178,7 +178,7 @@ bool KMP_search(char *first_read, read_end_piece &first_read_piece, char *second
   return 0;
 }
 
-bool find_overlaps_of_two_reads(READ &first, READ &second,olap &Olap, read_ends &Read_ends){
+bool find_overlaps_of_two_reads(read_raw &first, read_raw &second,olap &Olap, read_ends &Read_ends){
 
   bool found=0;
   
@@ -202,7 +202,7 @@ bool find_overlaps_of_two_reads(READ &first, READ &second,olap &Olap, read_ends 
   return found;
 }
 
-void find_olaps(READ list_of_reads[num_of_reads], olaps &list_of_olaps){
+void find_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_olaps){
 
   int first_read, second_read;
   olap Olap;
@@ -252,7 +252,7 @@ void print_olaps(olaps &list_of_olaps){
   fclose (pFile);
 }
 
-void find_and_print_olaps(READ list_of_reads[num_of_reads], olaps &list_of_olaps){
+void find_and_print_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_olaps){
 
   read_from_fasta(list_of_reads); 
   reverse_complement(list_of_reads);
@@ -268,7 +268,7 @@ int main(){
 
 
   //HW1 finds overlaps
-  READ list_of_reads[num_of_reads];
+  read_raw list_of_reads[num_of_reads];
   olaps list_of_olaps;  
   find_and_print_olaps(list_of_reads,list_of_olaps);
   //HW1 ends

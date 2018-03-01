@@ -23,42 +23,43 @@ const int read_len = 500;
 //HW2 codes for finding unitigs start here
 //
 
-class read_2{
+class read{//read number and direction
 public:
   int num;//=read number 0-299
   bool direction;//1=forward 0=reverse complement
-  read_2 rc();
 };
 
-read_2 read_2::rc(){
-  read_2 temp;
-  temp.num=num;
-  temp.direction=1-direction;
-  return temp;
+void rc_read(read &a){//reverse complement a read
+  a.direction=1-a.direction;
 }
 
-class edge_b {
+class b_edge {//basic edge
 public:
-  read_2 from_read, to_read;//from_read to to_read
-  edge_b rc();
+  read f_read, t_read;//f_read to t_read
 };
 
-edge_b edge_b::rc(){
-  edge_b temp;
-  temp.from_read=to_read.rc();
-  temp.to_read=from_read.rc();
-  return temp;
+void r_b_edge(b_edge &a){//reverse b_edge
+  int temp;
+  temp=a.f_read;
+  a.f_read=a.t_read;
+  a.t_read=temp;
+}
+
+void rc_b_edge(b_edge &a){//reverse complement b_edge
+  r_b_edge(a);
+  a.f_read.direction=1-a.f_read.direction;
+  a.t_read.direction=1-a.t_read.direction;
 }
 
 class edge {
-  edge_b olap_f, olap_rc;
+  b_edge olap_f, olap_rc;
   int offset;//how read 1 is ahead of read 2
   bool deleted;//deleted=1 if deleted edge
   void left_to_right_align_and_set_rc(); //change the directions of edges to left to right and set up reverse_complement edge
 };
 
 void edge::left_to_right_align_and_set_rc(){
-  read_2 temp;
+  read temp;
   if (offset<0){//left_to_right_align
     offset=-offset;
     temp=olap_f.from_read;
