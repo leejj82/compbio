@@ -173,34 +173,35 @@ bool KMP_search(char *first_read, read_end_piece &first_read_piece, char *second
       match_end=i-1;
       if (check_rest(first_read_piece.location, match_start,match_end,first_read,second_read)){
 	Olap.offset=-first_read_piece.location*match_start+(1-first_read_piece.location)*(read_len-match_end-1);
-	return 0;
+	return 1;
       }
     }
   }
-  return 1;
+  return 0;
 }
 
 bool find_overlaps_of_two_reads(READ &first, READ &second,olap &Olap, read_ends &Read_ends){
 
-  bool not_found=1;
-
-  if (not_found){ 
-    not_found=KMP_search(first.read, Read_ends.right, second.read, Olap);
+  bool found=0;
+  
+  if (KMP_search(first.read, Read_ends.right, second.read, Olap)){
     Olap.ori=1;
-    if (not_found){
-      not_found=KMP_search(first.read, Read_ends.right, second.read_rc, Olap);
-      Olap.ori=0;
-      if (not_found){
-	not_found=KMP_search(first.read, Read_ends.left, second.read, Olap);
-	Olap.ori=1;
-	if (not_found){
-	  not_found=KMP_search(first.read, Read_ends.left, second.read_rc, Olap);
-	  Olap.ori=0;
-	}
-      }
-    }
+    found=1;
   }
-  return 1-not_found;
+  else if (KMP_search(first.read, Read_ends.right, second.read_rc, Olap)){
+    Olap.ori=0;
+    found=1;
+  }
+  else if (KMP_search(first.read, Read_ends.left, second.read, Olap)){
+    Olap.ori=1;
+    found=1;
+  }
+  else if (KMP_search(first.read, Read_ends.left, second.read_rc, Olap)){
+    Olap.ori=0;
+    found=1;
+  }
+  
+  return found;
 }
 
 void find_olaps(READ list_of_reads[num_of_reads], olaps &list_of_olaps){
