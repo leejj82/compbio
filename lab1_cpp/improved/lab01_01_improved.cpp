@@ -266,7 +266,6 @@ void find_and_print_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_o
 
 int main(){
 
-
   //HW1 finds overlaps
   read_raw list_of_reads[num_of_reads];
   olaps list_of_olaps;  
