@@ -27,34 +27,48 @@ class read_2{
 public:
   int num;//=read number 0-299
   bool direction;//1=forward 0=reverse complement
+  read_2 rc();
 };
+
+read_2 read_2::rc(){
+  read_2 temp;
+  temp.num=num;
+  temp.direction=1-direction;
+  return temp;
+}
 
 class edge_b {
 public:
   read_2 from_read, to_read;//from_read to to_read
+  edge_b rc();
 };
+
+edge_b edge_b::rc(){
+  edge_b temp;
+  temp.from_read=to_read.rc();
+  temp.to_read=from_read.rc();
+  return temp;
+}
 
 class edge {
   edge_b olap_f, olap_rc;
   int offset;//how read 1 is ahead of read 2
   bool deleted;//deleted=1 if deleted edge
-  left_to_right_align();//realign edges so that the direction is in the right
-  set_rc();
+  void left_to_right_align_and_set_rc(); //change the directions of edges to left to right and set up reverse_complement edge
 };
 
-void edges::left_to_right_align(){
-  if (offset<0){
-    
+void edge::left_to_right_align_and_set_rc(){
+  read_2 temp;
+  if (offset<0){//left_to_right_align
+    offset=-offset;
+    temp=olap_f.from_read;
+    olap_f.from_read=olap_f.to_read;
+    olap_f.to_read=temp;
   }
+  olap_rc=olap_f.rc();
 }
 
-void edges::set_rc(){
-  olap_rc.from_read.num=olap_f.to_read.num;
-  olap_rc.from_read.direction=1-olap_f.to_read.direction;
-  olap_rc.to_read.num=olap_f.from_read.num;
-  olap_rc.to_read.direction=1-olap_f.from_read.direction;
-}
-
+/*
 
 
 
@@ -140,7 +154,7 @@ int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads+1], vector
   return num_of_olaps;
 }
 
-
+*/
 
 //
 //HW2 codes for finding unitigs end here
@@ -153,6 +167,7 @@ int main(){
 
   //HW2 ends
 
+  /*
   int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
 
   vector<vector<int> > list_of_exact_olaps;//save exact overlaps
@@ -164,7 +179,8 @@ int main(){
 
 
   record_edge_to_delete(list_of_olaps,num_of_olaps,location, num_of_edges_to_delete);
-  return 0;
+  */ 
+ return 0;
 }
 
 
