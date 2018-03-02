@@ -51,8 +51,8 @@ void read_raw::reverse_complement(){
 
 class olap {
 public:
-  int from_read,to_read;
-  int ori; // orientation=1/0 if to_read is forward/reverse complement
+  int f_read,t_read; //from_read and to_read
+  bool ori_t; //  ori_t=1/0 if t_read is forward/reverse complement
   int offset;
 };
 
@@ -183,19 +183,19 @@ bool find_overlaps_of_two_reads(read_raw &first, read_raw &second,olap &Olap, re
   bool found=0;
   
   if (KMP_search(first.read, Read_ends.right, second.read, Olap)){
-    Olap.ori=1;
+    Olap.ori_t=1;
     found=1;
   }
   else if (KMP_search(first.read, Read_ends.right, second.read_rc, Olap)){
-    Olap.ori=0;
+    Olap.ori_t=0;
     found=1;
   }
   else if (KMP_search(first.read, Read_ends.left, second.read, Olap)){
-    Olap.ori=1;
+    Olap.ori_t=1;
     found=1;
   }
   else if (KMP_search(first.read, Read_ends.left, second.read_rc, Olap)){
-    Olap.ori=0;
+    Olap.ori_t=0;
     found=1;
   }
   
@@ -219,8 +219,8 @@ void find_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_olaps){
     KMP_table(Read_ends.left);    	
 
     for (second_read=first_read+1;second_read<num_of_reads;second_read++){
-      Olap.from_read=first_read;
-      Olap.to_read=second_read;
+      Olap.f_read=first_read;
+      Olap.t_read=second_read;
       if (find_overlaps_of_two_reads(list_of_reads[first_read],list_of_reads[second_read],Olap,Read_ends)){
 	list_of_olaps.size++;
 	list_of_olaps.list.push_back(Olap);
@@ -240,9 +240,9 @@ void print_olaps(olaps &list_of_olaps){
 #endif
 
   for (int i=0;i<list_of_olaps.size;i++){
-    fprintf (pFile, " %03d  ",list_of_olaps.list[i].from_read+1);
-    fprintf (pFile, "%03d  ",list_of_olaps.list[i].to_read+1);
-    if (list_of_olaps.list[i].ori==1)
+    fprintf (pFile, " %03d  ",list_of_olaps.list[i].f_read+1);
+    fprintf (pFile, "%03d  ",list_of_olaps.list[i].t_read+1);
+    if (list_of_olaps.list[i].ori_t)
       fprintf (pFile, "F  ");
     else
       fprintf (pFile, "R  ");
@@ -270,9 +270,185 @@ void find_and_print_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_o
 //HW2 codes for finding unitigs start here
 //
 
-class olaps_d{
-  olaps * 
+class olap_2: public olap {
+public:
+  bool r_arrow; //direction of arrow is right
+  bool deleted; //deleted=1
 };
+
+class olaps_2 {
+public:  
+  int size;//total size
+  int deleted_size;//deleted overlap size
+  int exact_size;//exact overlap size
+  vector<olap_2> list;//overlap list
+  int f_read_loc[num_of_reads+1];//starting point of the f_read in the list_of_olaps
+  vector<olap_2> exact;//save the exact overlaps in the list_of_olaps
+  olaps_2();
+};
+
+olaps_2::olaps_2(){
+  size=0; deleted_size=0; exact_size=0;
+  fill(f_read_loc, f_read_loc+num_of_reads+1,0);
+}
+
+/*
+class edges_for_nodes{
+public:
+  int edges_for_nodes_index[num_of_reads][4]={{0}}; //save #of total edges, # of outgoing edges,  # of incoming edges, #used or not
+  vector<vector<vector<int> > > edges_for_nodes(num_of_reads, vector<vector<int> >(2));//for each node, save outgoing edges, incoming edges
+  vector<vector<vector<int> > > edges_for_nodes_RC(num_of_reads, vector<vector<int> >(2));//reverse complement list
+};
+*/
+
+class unitigs{
+public:
+  int size;
+//  int num_of_edges_for_unitigs=num_of_olaps-num_of_edges_to_delete;
+  //vector<vector<vector<int> > > unitigs;// contains all unitigs: unitig_number,edges
+  //  vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs
+};
+
+
+void read_from_olaps(olaps_2 &l_olaps){
+
+  char read_1_c[5],read_2_c[5], read_2_FR_c[5], offset_c[5];//read 1, read 2, Front/RC of read 2, offset
+  int i,j,offset,read_1,num_of_olaps=0;
+  olap_2 temp_olap;
+
+#if SAMPLE
+  ifstream infile("sample.olaps");
+#else
+  ifstream infile("lab01.olaps");
+#endif
+
+  
+  if (infile.is_open()) {
+    while (infile >> read_1_c>> read_2_c>> read_2_FR_c >> offset_c){
+
+      offset=atoi(offset_c);
+
+      if( offset==0){ // two reads are identical
+	if (read_2_FR_c[0]=='F')
+	  temp_olap.ori_t=1;
+	else
+	  temp_olap.ori_t=0;
+	temp_olap.f_read=atoi(read_1_c)-1;
+	temp_olap.t_read=atoi(read_2_c)-1;
+	l_olaps.exact_size++;
+	l_olaps.exact.push_back(temp_olap);
+      }
+      else{//two reads are not identical
+	read_1=atoi(read_1_c);
+
+	temp_olap.f_read=read_1-1;
+	temp_olap.t_read=atoi(read_2_c)-1;
+
+	l_olaps.f_read_loc[read_1]=num_of_olaps;
+
+	if (read_2_FR_c[0]=='F')
+	  temp_olap.ori_t=1;
+	else
+	  temp_olap.ori_t=0;
+	temp_olap.offset=offset;
+	if ( offset >0)
+	  temp_olap.r_arrow=1;
+	else 
+	  temp_olap.r_arrow=0;
+	
+	temp_olap.deleted=0;
+
+	l_olaps.list.push_back(temp_olap);
+	num_of_olaps++;
+      }
+
+    }
+    infile.close();
+  }
+  
+  
+  for (i=1;i<num_of_reads;i++){//fill the from read location table
+    if (l_olaps.f_read_loc[i]==0)
+      l_olaps.f_read_loc[i]=l_olaps.f_read_loc[i-1];
+    else l_olaps.f_read_loc[i]+=1;
+  }
+  l_olaps.f_read_loc[num_of_reads]=num_of_olaps;
+
+  for (i=0;i<l_olaps.exact_size;i++){//delete olaps connecting exact olaps
+    for (j=0;j<num_of_olaps;j++){
+      if((l_olaps.list[i].t_read==l_olaps.list[j].f_read || l_olaps.list[i].t_read==l_olaps.list[j].t_read) && 	l_olaps.list[j].deleted==0){
+	l_olaps.list[j].deleted=1;
+	l_olaps.deleted_size++;
+      }
+    }
+  }
+
+  l_olaps.size=num_of_olaps;
+}
+
+
+
+
+      
+void find_unis(unitigs unis){
+
+  olaps_2 l_olaps; 
+
+  read_from_olaps(l_olaps);
+
+#if 1
+  FILE * pFile;
+  pFile = fopen ("lab01.temp","w");
+
+
+  fprintf (pFile, "%d %d %d  \n",l_olaps.size, l_olaps.exact_size, l_olaps.deleted_size);
+  fprintf (pFile, "%d %d %d  \n",l_olaps.exact[0].f_read, l_olaps.exact[0].t_read, l_olaps.exact[0].ori_t);
+ for (int i=5;i<11;i++)
+  fprintf (pFile, "%d %d %d %d %d %d \n",l_olaps.list[i].f_read, l_olaps.list[i].t_read, l_olaps.list[i].ori_t,l_olaps.list[i].offset,l_olaps.list[i].r_arrow,l_olaps.list[i].deleted);
+  
+  for (int i=0;i<num_of_reads+1;i++)
+    fprintf (pFile, "%d \n",l_olaps.f_read_loc[i]);
+
+     
+  /*
+  for (int i=0;i<list_of_olaps.size;i++){
+    fprintf (pFile, " %03d  ",list_of_olaps.list[i].f_read+1);
+    fprintf (pFile, "%03d  ",list_of_olaps.list[i].t_read+1);
+    if (list_of_olaps.list[i].ori_t)
+      fprintf (pFile, "F  ");
+    else
+      fprintf (pFile, "R  ");
+    fprintf (pFile, "%*d\n",4,list_of_olaps.list[i].offset);
+    }*/
+
+  fclose (pFile);
+#endif
+
+ 
+
+  
+  /*
+  record_edge_to_delete(list_of_olaps,num_of_olaps,location, num_of_edges_to_delete);
+
+  set_up_viable_edges(location, list_of_olaps, edges_for_nodes,edges_for_nodes_index, list_of_exact_olaps, num_of_exact_olaps);
+  set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
+
+  find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
+ 
+int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
+  */
+}
+
+
+void print_unis(unitigs unis){
+}
+
+
+void find_and_print_unitigs(unitigs unis){
+  find_unis(unis);
+  print_unis(unis);
+};
+
 
 
 
@@ -286,7 +462,17 @@ int main(){
   //HW1 finds overlaps
   read_raw list_of_reads[num_of_reads];
   olaps list_of_olaps;  
-  find_and_print_olaps(list_of_reads,list_of_olaps);
+  find_and_print_olaps(list_of_reads, list_of_olaps);
   //HW1 ends
+
+  //HW2 finds unitigs
+  unitigs unis;
+  find_and_print_unitigs(unis);
+  //HW2 ends
+ 
+  //HW3 finds a contig
+  //HW3 ends
+
+
   return 0;
 }

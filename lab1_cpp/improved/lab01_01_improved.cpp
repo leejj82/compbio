@@ -51,8 +51,8 @@ void read_raw::reverse_complement(){
 
 class olap {
 public:
-  int from_read,to_read;
-  int ori; // orientation=1/0 if to_read is forward/reverse complement
+  int f_read,t_read; //from_read and to_read
+  bool ori_t; //  ori_t=1/0 if t_read is forward/reverse complement
   int offset;
 };
 
@@ -183,19 +183,19 @@ bool find_overlaps_of_two_reads(read_raw &first, read_raw &second,olap &Olap, re
   bool found=0;
   
   if (KMP_search(first.read, Read_ends.right, second.read, Olap)){
-    Olap.ori=1;
+    Olap.ori_t=1;
     found=1;
   }
   else if (KMP_search(first.read, Read_ends.right, second.read_rc, Olap)){
-    Olap.ori=0;
+    Olap.ori_t=0;
     found=1;
   }
   else if (KMP_search(first.read, Read_ends.left, second.read, Olap)){
-    Olap.ori=1;
+    Olap.ori_t=1;
     found=1;
   }
   else if (KMP_search(first.read, Read_ends.left, second.read_rc, Olap)){
-    Olap.ori=0;
+    Olap.ori_t=0;
     found=1;
   }
   
@@ -219,8 +219,8 @@ void find_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_olaps){
     KMP_table(Read_ends.left);    	
 
     for (second_read=first_read+1;second_read<num_of_reads;second_read++){
-      Olap.from_read=first_read;
-      Olap.to_read=second_read;
+      Olap.f_read=first_read;
+      Olap.t_read=second_read;
       if (find_overlaps_of_two_reads(list_of_reads[first_read],list_of_reads[second_read],Olap,Read_ends)){
 	list_of_olaps.size++;
 	list_of_olaps.list.push_back(Olap);
@@ -240,9 +240,9 @@ void print_olaps(olaps &list_of_olaps){
 #endif
 
   for (int i=0;i<list_of_olaps.size;i++){
-    fprintf (pFile, " %03d  ",list_of_olaps.list[i].from_read+1);
-    fprintf (pFile, "%03d  ",list_of_olaps.list[i].to_read+1);
-    if (list_of_olaps.list[i].ori==1)
+    fprintf (pFile, " %03d  ",list_of_olaps.list[i].f_read+1);
+    fprintf (pFile, "%03d  ",list_of_olaps.list[i].t_read+1);
+    if (list_of_olaps.list[i].ori_t)
       fprintf (pFile, "F  ");
     else
       fprintf (pFile, "R  ");
@@ -264,12 +264,14 @@ void find_and_print_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_o
 //HW1 codes for finding overlaps end here
 //
 
+
 int main(){
 
   //HW1 finds overlaps
   read_raw list_of_reads[num_of_reads];
   olaps list_of_olaps;  
-  find_and_print_olaps(list_of_reads,list_of_olaps);
+  find_and_print_olaps(list_of_reads, list_of_olaps);
   //HW1 ends
+  
   return 0;
 }

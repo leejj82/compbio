@@ -67,16 +67,14 @@ void edge::left_to_right_align_and_set_rc(){
   rc_b_edge(olap_rc);
 }
 
+class olaps{
+  int read1, read2;
+  int ori
+  
+};
+
 /*
-
-
-
-
 list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
-
-
-
-
 
 int read_from_olaps(int list_of_olaps[][6], int location[num_of_reads+1], vector<vector<int> >  &list_of_exact_olaps, int &num_of_exact_olaps,int &num_of_edges_to_delete){
 
