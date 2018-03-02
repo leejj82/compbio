@@ -421,99 +421,8 @@ void record_edge_to_delete(olaps_2 &l_olaps){
   }
 }
 
-      
-void find_unis(unitigs unis){
 
-  olaps_2 l_olaps; 
-  read_from_olaps(l_olaps);
-  record_edge_to_delete(l_olaps);
-
-    
-  /*
- 
-  set_up_viable_edges(location, list_of_olaps, edges_for_nodes,edges_for_nodes_index, list_of_exact_olaps, num_of_exact_olaps);
-  set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
-
-  find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
- 
-int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
-  */
-
-#if 1
-  FILE * pFile;
-  pFile = fopen ("lab01.temp","w");
-
-
-  fprintf (pFile, "%d %d %d  \n",l_olaps.size, l_olaps.exact_size, l_olaps.deleted_size);
-  fprintf (pFile, "%d %d %d  \n",l_olaps.exact[0].f_read, l_olaps.exact[0].t_read, l_olaps.exact[0].ori_t);
-  for (int i=0;i<30;i++)
-    fprintf (pFile, "%d %d %d %d %d %d \n",l_olaps.list[i].f_read, l_olaps.list[i].t_read, l_olaps.list[i].ori_t,l_olaps.list[i].offset,l_olaps.list[i].r_arrow,l_olaps.list[i].deleted);
-  
-  for (int i=0;i<num_of_reads+1;i++)
-    fprintf (pFile, "%d \n",l_olaps.f_read_loc[i]);
-
-     
-  /*
-  for (int i=0;i<list_of_olaps.size;i++){
-    fprintf (pFile, " %03d  ",list_of_olaps.list[i].f_read+1);
-    fprintf (pFile, "%03d  ",list_of_olaps.list[i].t_read+1);
-    if (list_of_olaps.list[i].ori_t)
-      fprintf (pFile, "F  ");
-    else
-      fprintf (pFile, "R  ");
-    fprintf (pFile, "%*d\n",4,list_of_olaps.list[i].offset);
-    }*/
-
-  fclose (pFile);
-#endif
-
-
-}
-
-
-void print_unis(unitigs unis){
-
-}
-
-
-void find_and_print_unitigs(unitigs unis){
-  find_unis(unis);
-  print_unis(unis);
-};
-
-
-
-
-//
-//HW2 codes for finding unitigs end here
-//
-
-
-int main(){
-
-  //HW1 finds overlaps
-  read_raw list_of_reads[num_of_reads];
-  olaps list_of_olaps;  
-  find_and_print_olaps(list_of_reads, list_of_olaps);
-  //HW1 ends
-
-  //HW2 finds unitigs
-  unitigs unis;
-  find_and_print_unitigs(unis);
-  //HW2 ends
- 
-  //HW3 finds a contig
-  //HW3 ends
-
-
-  return 0;
-}
-
-
-
-
-/*
-void set_up_viable_edges(int location[num_of_reads], int list_of_olaps[][6], vector<vector<vector<int> > > &edges_for_nodes,int edges_for_nodes_index[][4],  vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
+void set_up_viable_edges(olaps_2 &l_olaps){
 
   int i,j;
   
@@ -590,6 +499,96 @@ void set_up_viable_edges(int location[num_of_reads], int list_of_olaps[][6], vec
     edges_for_nodes_index[list_of_exact_olaps[i][1]][3]+=1;
   }
 }
+
+void find_unis(unitigs unis){
+
+  olaps_2 l_olaps; 
+  read_from_olaps(l_olaps);
+  record_edge_to_delete(l_olaps);
+  set_up_viable_edges(l_olaps);
+  // set_up_edges_RC(l_olaps);//setup RC
+  
+  /*
+  find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
+ 
+int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
+  */
+
+#if 1
+  FILE * pFile;
+  pFile = fopen ("lab01.temp","w");
+
+
+  fprintf (pFile, "%d %d %d  \n",l_olaps.size, l_olaps.exact_size, l_olaps.deleted_size);
+  fprintf (pFile, "%d %d %d  \n",l_olaps.exact[0].f_read, l_olaps.exact[0].t_read, l_olaps.exact[0].ori_t);
+
+  for (int i=0;i<30;i++)
+    fprintf (pFile, "%d %d %d %d %d %d \n",l_olaps.list[i].f_read, l_olaps.list[i].t_read, l_olaps.list[i].ori_t,l_olaps.list[i].offset,l_olaps.list[i].r_arrow,l_olaps.list[i].deleted);
+  
+  for (int i=0;i<num_of_reads+1;i++)
+    fprintf (pFile, "%d \n",l_olaps.f_read_loc[i]);
+
+     
+  /*
+  for (int i=0;i<list_of_olaps.size;i++){
+    fprintf (pFile, " %03d  ",list_of_olaps.list[i].f_read+1);
+    fprintf (pFile, "%03d  ",list_of_olaps.list[i].t_read+1);
+    if (list_of_olaps.list[i].ori_t)
+      fprintf (pFile, "F  ");
+    else
+      fprintf (pFile, "R  ");
+    fprintf (pFile, "%*d\n",4,list_of_olaps.list[i].offset);
+    }*/
+
+  fclose (pFile);
+#endif
+
+
+}
+
+
+void print_unis(unitigs unis){
+
+}
+
+
+void find_and_print_unitigs(unitigs unis){
+  find_unis(unis);
+  print_unis(unis);
+};
+
+
+
+
+//
+//HW2 codes for finding unitigs end here
+//
+
+
+int main(){
+
+  //HW1 finds overlaps
+  read_raw list_of_reads[num_of_reads];
+  olaps list_of_olaps;  
+  find_and_print_olaps(list_of_reads, list_of_olaps);
+  //HW1 ends
+
+  //HW2 finds unitigs
+  unitigs unis;
+  find_and_print_unitigs(unis);
+  //HW2 ends
+ 
+  //HW3 finds a contig
+  //HW3 ends
+
+
+  return 0;
+}
+
+
+
+
+/*
  
 void set_up_edges_RC(vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC){
 
