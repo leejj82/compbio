@@ -321,53 +321,44 @@ void read_from_olaps(olaps_2 &l_olaps){
 #else
   ifstream infile("lab01.olaps");
 #endif
-
   
   if (infile.is_open()) {
     while (infile >> read_1_c>> read_2_c>> read_2_FR_c >> offset_c){
 
+      read_1=atoi(read_1_c);
+
+      temp_olap.f_read=read_1-1;
+      temp_olap.t_read=atoi(read_2_c)-1;
+
+      if (read_2_FR_c[0]=='F')
+	temp_olap.ori_t=1;
+      else
+	temp_olap.ori_t=0;
+
       offset=atoi(offset_c);
 
       if( offset==0){ // two reads are identical
-	if (read_2_FR_c[0]=='F')
-	  temp_olap.ori_t=1;
-	else
-	  temp_olap.ori_t=0;
-	temp_olap.f_read=atoi(read_1_c)-1;
-	temp_olap.t_read=atoi(read_2_c)-1;
 	l_olaps.exact_size++;
 	l_olaps.exact.push_back(temp_olap);
       }
+	
       else{//two reads are not identical
-	read_1=atoi(read_1_c);
-
-	temp_olap.f_read=read_1-1;
-	temp_olap.t_read=atoi(read_2_c)-1;
-
-	l_olaps.f_read_loc[read_1]=num_of_olaps;
-
-	if (read_2_FR_c[0]=='F')
-	  temp_olap.ori_t=1;
-	else
-	  temp_olap.ori_t=0;
+       	
 	temp_olap.offset=offset;
 	if ( offset >0)
 	  temp_olap.r_arrow=1;
 	else 
-	  temp_olap.r_arrow=0;
-	
+	  temp_olap.r_arrow=0;	
+	l_olaps.f_read_loc[read_1]=num_of_olaps;
 	temp_olap.deleted=0;
-
 	l_olaps.list.push_back(temp_olap);
 	num_of_olaps++;
       }
-
     }
     infile.close();
   }
   
-  
-  for (i=1;i<num_of_reads;i++){//fill the from read location table
+  for (i=1;i<num_of_reads;i++){//fill the f_read location table
     if (l_olaps.f_read_loc[i]==0)
       l_olaps.f_read_loc[i]=l_olaps.f_read_loc[i-1];
     else l_olaps.f_read_loc[i]+=1;
@@ -386,15 +377,67 @@ void read_from_olaps(olaps_2 &l_olaps){
   l_olaps.size=num_of_olaps;
 }
 
+void record_edge_to_delete(olaps_2 &l_olaps){
 
+//i the number of read1
+//j the location of read1, read2_1 pair
+//k the location of read1, read2_2 pair
+//l the number of read2_1, read2_2 pair
 
+  int i,j,k,l;
+  bool deleted=1;
+  int arrow0,arrow1,arrow2;
+   
+  for (i=0;i<num_of_reads-2;i++){
+    for (j=l_olaps.f_read_loc[i];j<l_olaps.f_read_loc[i+1]-1;j++){
+      for (k=j+1;k<l_olaps.f_read_loc[i+1];k++){
+	for (l=l_olaps.f_read_loc[l_olaps.list[j].t_read];l<l_olaps.f_read_loc[l_olaps.list[j].t_read+1];l++){
+      	  if(l_olaps.list[k].t_read==l_olaps.list[l].t_read){
+    	    if((l_olaps.list[j].ori_t+l_olaps.list[k].ori_t+l_olaps.list[l].ori_t)%2==1){
+	      arrow0=l_olaps.list[j].r_arrow;
+	      arrow1=l_olaps.list[k].r_arrow;
+	      arrow2=l_olaps.list[l].r_arrow;
+	      if (l_olaps.list[j].ori_t==0)
+		arrow2=1-arrow2;
+	      if (arrow0==arrow1 && arrow1==arrow2 && l_olaps.list[k].deleted==0){
+		l_olaps.list[k].deleted=deleted;
+		l_olaps.deleted_size++;
+	      }
+	      else if (arrow0==arrow1 && arrow0!=arrow2 && l_olaps.list[j].deleted==0){
+		l_olaps.list[j].deleted=deleted;
+		l_olaps.deleted_size++;
+	      }
+	      else if (arrow0!=arrow1 && arrow1==arrow2 && l_olaps.list[l].deleted==0){
+		l_olaps.list[l].deleted=deleted;
+		l_olaps.deleted_size++;
+      	      }
+	    }
+	  }
+	  else if (l_olaps.list[l].t_read>l_olaps.list[k].t_read)
+	    break;
+	}
+      }
+    }
+  }
+}
 
       
 void find_unis(unitigs unis){
 
   olaps_2 l_olaps; 
-
   read_from_olaps(l_olaps);
+  record_edge_to_delete(l_olaps);
+
+    
+  /*
+ 
+  set_up_viable_edges(location, list_of_olaps, edges_for_nodes,edges_for_nodes_index, list_of_exact_olaps, num_of_exact_olaps);
+  set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
+
+  find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
+ 
+int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
+  */
 
 #if 1
   FILE * pFile;
@@ -403,8 +446,8 @@ void find_unis(unitigs unis){
 
   fprintf (pFile, "%d %d %d  \n",l_olaps.size, l_olaps.exact_size, l_olaps.deleted_size);
   fprintf (pFile, "%d %d %d  \n",l_olaps.exact[0].f_read, l_olaps.exact[0].t_read, l_olaps.exact[0].ori_t);
- for (int i=5;i<11;i++)
-  fprintf (pFile, "%d %d %d %d %d %d \n",l_olaps.list[i].f_read, l_olaps.list[i].t_read, l_olaps.list[i].ori_t,l_olaps.list[i].offset,l_olaps.list[i].r_arrow,l_olaps.list[i].deleted);
+  for (int i=0;i<30;i++)
+    fprintf (pFile, "%d %d %d %d %d %d \n",l_olaps.list[i].f_read, l_olaps.list[i].t_read, l_olaps.list[i].ori_t,l_olaps.list[i].offset,l_olaps.list[i].r_arrow,l_olaps.list[i].deleted);
   
   for (int i=0;i<num_of_reads+1;i++)
     fprintf (pFile, "%d \n",l_olaps.f_read_loc[i]);
@@ -424,23 +467,12 @@ void find_unis(unitigs unis){
   fclose (pFile);
 #endif
 
- 
 
-  
-  /*
-  record_edge_to_delete(list_of_olaps,num_of_olaps,location, num_of_edges_to_delete);
-
-  set_up_viable_edges(location, list_of_olaps, edges_for_nodes,edges_for_nodes_index, list_of_exact_olaps, num_of_exact_olaps);
-  set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
-
-  find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
- 
-int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
-  */
 }
 
 
 void print_unis(unitigs unis){
+
 }
 
 
@@ -476,3 +508,496 @@ int main(){
 
   return 0;
 }
+
+
+
+
+/*
+void set_up_viable_edges(int location[num_of_reads], int list_of_olaps[][6], vector<vector<vector<int> > > &edges_for_nodes,int edges_for_nodes_index[][4],  vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
+
+  int i,j;
+  
+  for (i=0;i<num_of_reads;i++){//read1,read2,F/R(1/0),olap_length,location,deleted
+    for (j=location[i];j<location[i+1];j++){
+      if (list_of_olaps[j][5]==0){ //not deleted
+	if (list_of_olaps[j][4]==1){ //location of first read front
+	  edges_for_nodes[i][1].push_back(i);
+	  edges_for_nodes[i][1].push_back(1);
+	  edges_for_nodes[i][1].push_back(list_of_olaps[j][1]);
+	  edges_for_nodes[i][1].push_back(list_of_olaps[j][2]);
+	  edges_for_nodes[i][1].push_back(list_of_olaps[j][3]);
+	
+	  edges_for_nodes_index[i][0]+=1;
+	  edges_for_nodes_index[i][2]+=1;
+
+	  if (list_of_olaps[j][2]==1){//forward
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(1);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][1]);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(1);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][3]);
+	    
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][1]+=1;
+	  }
+	  else{//reverse complement
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][1]);
+     	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(1);
+     	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(0);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][3]);
+	    
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][2]+=1;
+	  }
+	}
+	else { //location of first read back
+	  edges_for_nodes[i][0].push_back(list_of_olaps[j][1]);
+	  edges_for_nodes[i][0].push_back(list_of_olaps[j][2]);
+	  edges_for_nodes[i][0].push_back(i);
+	  edges_for_nodes[i][0].push_back(1);
+	  edges_for_nodes[i][0].push_back(-list_of_olaps[j][3]);
+	
+	  edges_for_nodes_index[i][0]+=1;
+	  edges_for_nodes_index[i][1]+=1;
+
+	  if (list_of_olaps[j][2]==1){//forward
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(list_of_olaps[j][1]);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(1);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(1);
+	    edges_for_nodes[list_of_olaps[j][1]][1].push_back(-list_of_olaps[j][3]);
+	    
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][2]+=1;
+	  }
+	  else{//reverse complement
+  	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(i);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(0);
+	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(list_of_olaps[j][1]);
+     	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(1);
+   	    edges_for_nodes[list_of_olaps[j][1]][0].push_back(-list_of_olaps[j][3]);
+	    
+	    edges_for_nodes_index[list_of_olaps[j][1]][0]+=1;
+	    edges_for_nodes_index[list_of_olaps[j][1]][1]+=1;
+	  }
+	}
+      }
+    }
+  }
+
+  for (i=0;i<num_of_exact_olaps;i++){
+    edges_for_nodes_index[list_of_exact_olaps[i][1]][3]+=1;
+  }
+}
+ 
+void set_up_edges_RC(vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC){
+
+  int temp;
+  for (int i=0;i<edges_for_nodes.size();i++){
+    for (int j=0;j<2;j++){
+      if (edges_for_nodes[i][j].size()>0){
+	edges_for_nodes_RC[i][1-j]=edges_for_nodes[i][j];
+	for (int k=0;k<edges_for_nodes[i][j].size()/5;k++){
+	  temp=edges_for_nodes_RC[i][1-j][5*k];
+	  edges_for_nodes_RC[i][1-j][5*k]=edges_for_nodes_RC[i][1-j][5*k+2];
+	  edges_for_nodes_RC[i][1-j][5*k+2]=temp;
+
+	  temp=edges_for_nodes_RC[i][1-j][5*k+1];    
+	  edges_for_nodes_RC[i][1-j][5*k+1]=1-edges_for_nodes_RC[i][1-j][5*k+3];
+	  edges_for_nodes_RC[i][1-j][5*k+3]=1-temp;
+	}
+      }
+    }
+  }
+}
+
+
+void previous_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges_for_nodes,  vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &unitig_front){
+
+  int i,used=1;
+  int Forward=1, RC=0;
+  int previous_node;
+
+  int array[5]={-1,-1,-1,-1,-1};
+  vector<int> null_vector(array,array+5);
+  
+  if (FB==Forward){ //current node is in the forward order
+    if (edges_for_nodes_index[starting_point][1]>=1){  
+
+      unitig_front.push_back(edges_for_nodes[starting_point][0]);
+
+      if (edges_for_nodes_index[starting_point][1]==1){//there is exactly one edge connecting with previous node
+	if (edges_for_nodes[starting_point][0][1]==Forward){//the previous node is in the forward order
+
+	  previous_node=edges_for_nodes[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][2]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }      
+	}
+	else{//the previous node is in the reverse complement order
+      
+	  previous_node=edges_for_nodes[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][1]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }
+	}
+      }
+    }
+    else { //there is no edge to the previous node=>attach null vector
+      unitig_front.push_back(null_vector);
+    }
+  }
+  else{ //current node is in the reverse complement order
+    
+    if (edges_for_nodes_index[starting_point][2]>=1){  
+
+      unitig_front.push_back(edges_for_nodes_RC[starting_point][0]);
+
+      if (edges_for_nodes_index[starting_point][2]==1){//there is exactly one edge connecting with previous node
+	if (edges_for_nodes_RC[starting_point][0][1]==Forward){//the previous node is in the forward order
+
+	  previous_node=edges_for_nodes_RC[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][2]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }      
+	}
+	else{//the previous node is in the reverse complement order
+      
+	  previous_node=edges_for_nodes_RC[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][1]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }
+	}
+      }
+    }
+    else { //there is no edge to the next node=>attach null vector
+      unitig_front.push_back(null_vector);
+    }
+  }
+}
+
+void next_read(int starting_point, int FB,  vector<vector<vector<int> > > &edges_for_nodes,  vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &unitig_back){
+  
+  int i,used=1;
+  int Forward=1, RC=0;
+  int next_node;
+  int array[5]={-1,-1,-1,-1,-1};
+  vector<int> null_vector(array,array+5);
+  
+  if (FB==Forward){ //current node is in the forward order
+    if (edges_for_nodes_index[starting_point][2]>=1){//next node
+
+      unitig_back.push_back(edges_for_nodes[starting_point][1]);
+
+      if (edges_for_nodes_index[starting_point][2]==1){//there is exactly one edge connecting with next node
+	if (edges_for_nodes[starting_point][1][3]==Forward){//the next node is in the forward order
+
+	  next_node=edges_for_nodes[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][1]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+	else{//the next node is in the reverse complement order
+      
+	  next_node=edges_for_nodes[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][2]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+      }
+    }
+    else { //there is no edge to the previous node=>attach null vector
+      unitig_back.push_back(null_vector);
+    }
+  }
+  else{ //current node is in the reverse complement order
+    if (edges_for_nodes_index[starting_point][1]>=1){//next node
+
+      unitig_back.push_back(edges_for_nodes_RC[starting_point][1]);
+
+      if (edges_for_nodes_index[starting_point][1]==1){//there is exactly one edge connecting with next node
+	if (edges_for_nodes_RC[starting_point][1][3]==Forward){//the next node is in the forward order
+
+	  next_node=edges_for_nodes_RC[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][1]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+	else{//the next node is in the reverse complement order
+      
+	  next_node=edges_for_nodes_RC[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][2]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+      }
+    }
+    else { //there is no edge to the next node=>attach null vector
+      unitig_back.push_back(null_vector);
+    }
+  }
+}
+
+
+void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<vector<int> > >  &unitigs,vector<vector<int> > &unitigs_info, vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps, int &read_exact_match_count){
+
+  int i,j,used=1;
+  vector<vector<int> > unitig_front;
+  vector<vector<int> > unitig_back;
+  vector<vector<int> > unitig;
+  int Forward=1, RC=0;
+  int previous_node, next_node;
+
+  int array[5]={-1,-1,-1,-1,-1};
+  vector<int> null_vector(array,array+5);
+  vector<int> temp(2);
+
+  int sum;
+  
+  if (edges_for_nodes_index[starting_point][0]>0){ //there exists at least one edge connected to the node
+  
+    if (edges_for_nodes_index[starting_point][1]>=1){  //previous node
+
+      unitig_front.push_back(edges_for_nodes[starting_point][0]);
+
+      if (edges_for_nodes_index[starting_point][1]==1){//there is exactly one edge connecting with previous node
+	if (edges_for_nodes[starting_point][0][1]==Forward){//the previous node is in the forward order
+
+	  previous_node=edges_for_nodes[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][2]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }      
+	}
+	else{//the previous node is in the reverse complement order
+      
+	  previous_node=edges_for_nodes[starting_point][0][0];
+
+	  if (edges_for_nodes_index[previous_node][1]==1 ){//the previous node has exactly one outgoing edge
+	    edges_for_nodes_index[previous_node][3]=used;
+	    previous_read(previous_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  }
+	}
+      }
+    }
+    else { //there is no edge to the previous node=>attach null vector
+      unitig_front.push_back(null_vector);
+    }
+
+    if (edges_for_nodes_index[starting_point][2]>=1){//next node
+
+      unitig_back.push_back(edges_for_nodes[starting_point][1]);
+
+      if (edges_for_nodes_index[starting_point][2]==1){//there is exactly one edge connecting with next node
+	if (edges_for_nodes[starting_point][1][3]==Forward){//the next node is in the forward order
+
+	  next_node=edges_for_nodes[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][1]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+	else{//the next node is in the reverse complement order
+      
+	  next_node=edges_for_nodes[starting_point][1][2];
+
+	  if (edges_for_nodes_index[next_node][2]==1 ){//the next node has exactly one incoming edge
+	    edges_for_nodes_index[next_node][3]=used;
+	    next_read(next_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  }
+	}
+      }
+    }
+    else { //there is no edge to the next node=>attach null vector
+      unitig_back.push_back(null_vector);
+    }
+    
+    reverse(unitig_front.begin(),unitig_front.end());//reorganize unitig
+    unitig_front.insert(unitig_front.end(),unitig_back.begin(),unitig_back.end());
+
+    if (read_exact_match_count<num_of_exact_olaps){
+      for (i=1;i<unitig_front.size();i++){//insert exactly identical reads
+	for (j=0;j<num_of_exact_olaps;j++){
+	  if(unitig_front[i][0]==list_of_exact_olaps[j][0]){
+
+	    read_exact_match_count++;
+	    if (unitig_front[i][0]!=-1){//not the inserted null vector
+	      if(unitig_front[i][1]==1){//front order
+	   
+		vector<int> vec;
+		vec.push_back(unitig_front[i][0]);
+		vec.push_back(1);
+		vec.push_back(list_of_exact_olaps[j][1]);
+		vec.push_back(list_of_exact_olaps[j][2]);
+		vec.push_back(0);
+
+		unitig_front[i][0]=list_of_exact_olaps[j][1];
+		unitig_front[i][1]=list_of_exact_olaps[j][2];
+		unitig_front.insert(unitig_front.begin()+i,vec);
+	      }
+	      else {//reverse complement order
+	   
+		vector<int> vec;
+		vec.push_back(unitig_front[i][0]);
+		vec.push_back(0);
+		vec.push_back(list_of_exact_olaps[j][1]);
+		vec.push_back(1-list_of_exact_olaps[j][2]);
+		vec.push_back(0);
+
+		unitig_front[i][0]=list_of_exact_olaps[j][1];
+		unitig_front[i][1]=1-list_of_exact_olaps[j][2];
+	    
+		unitig_front.insert(unitig_front.begin()+i,vec);
+	      }
+	    }
+	  }
+	}
+      }
+    }
+
+    temp[0]=(int)(unitig_front.size())-1; //# of reads in a unitig
+    sum=read_len;//sum is the length of each unitig
+    for (i=1;i<temp[0];i++){
+      sum+=unitig_front[i][4];
+    }
+    temp[1]=sum;
+
+    unitigs_info.push_back(temp);//record # of reads and length for each unitig
+    unitigs.push_back(unitig_front);//input in the set of unitigs
+
+
+   
+  }
+
+  else {//single node case
+    cout<<"There exists a single node. Not implemented yet.";
+  }  
+}
+  
+
+int find_unitigs(vector<vector<vector<int> > >  &unitigs, vector<vector<int> > &unitigs_info,  vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC, int edges_for_nodes_index[][4], vector<vector<int> > &list_of_exact_olaps, int num_of_exact_olaps){
+  
+  int not_used=0,used=1;
+  int front=1,back=0;
+  int read_exact_match_count=0;
+  
+  for(int starting_point=0;starting_point<num_of_reads;starting_point++){
+    if (edges_for_nodes_index[starting_point][3]==not_used){//node not used
+      edges_for_nodes_index[starting_point][3]=used;
+      find_a_unitig(starting_point,edges_for_nodes, edges_for_nodes_RC,edges_for_nodes_index, unitigs, unitigs_info, list_of_exact_olaps, num_of_exact_olaps, read_exact_match_count);
+    }
+  }
+}   
+
+void print_unis( vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info){
+
+  int i,j,k,ind,sum;
+  FILE * pFile;
+
+#if SAMPLE
+  pFile = fopen ("sample.unis","w");
+#else
+  pFile = fopen ("lab01.unis","w");
+#endif
+ 	
+	
+  for (i=0;i<unitigs.size();i++){
+ 
+    fprintf (pFile, "UNI  %02d %*d %*d\n", i+1, 5,unitigs_info[i][0],6,unitigs_info[i][1]);//print the title
+
+    fprintf (pFile, "  %03d  ",unitigs[i][1][0]+1);//print the first element
+    ind=unitigs[i][1][1];
+    if (ind==1)
+      fprintf (pFile, "F  ");
+    else
+      fprintf (pFile, "R  ");
+    fprintf (pFile, "%*d\n",4,0);
+
+
+    for (j=1;j<unitigs_info[i][0];j++){//print the rest
+      
+      fprintf (pFile, "  %03d  ",unitigs[i][j][2]+1);
+      ind=unitigs[i][j][3];
+      if (ind==1)
+	fprintf (pFile, "F  ");
+      else
+	fprintf (pFile, "R  ");
+      fprintf (pFile, "%*d\n",4,unitigs[i][j][4]);
+    }
+  }
+}
+
+
+
+void print_unis_raw ( vector<vector<vector<int> > > &unitigs){
+
+  int i,j,k;
+  FILE * pFile;
+
+#if SAMPLE
+  pFile = fopen ("sample.unis_raw","w");
+#else
+  pFile = fopen ("lab01.unis_raw","w");
+#endif
+ 	
+
+  for (i=0;i<unitigs.size();i++){
+    for (j=0;j<unitigs[i].size();j++){
+      for (k=0;k<unitigs[i][j].size();k++){
+	fprintf (pFile, "%d  ",unitigs[i][j][k]);
+      }
+      fprintf (pFile, "\n");
+    }
+    fprintf (pFile, "\n\n");
+  }
+}
+
+int main(){
+
+  int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
+
+  vector<vector<int> > list_of_exact_olaps;//save exact overlaps
+  int num_of_exact_olaps=0;
+  int num_of_edges_to_delete=0;
+  int location[num_of_reads+1]={0};//starting point of the read 1 in the list_of_olaps
+
+  int num_of_olaps=read_from_olaps(list_of_olaps,location,list_of_exact_olaps,num_of_exact_olaps,num_of_edges_to_delete);
+
+  record_edge_to_delete(list_of_olaps,num_of_olaps,location, num_of_edges_to_delete);
+
+  int num_of_edges_for_unitigs=num_of_olaps-num_of_edges_to_delete;
+
+  vector<vector<vector<int> > > edges_for_nodes(num_of_reads, vector<vector<int> >(2));//for each node, save outgoing edges, incoming edges
+  int edges_for_nodes_index[num_of_reads][4]={{0}}; //save #of total edges, # of outgoing edges,  # of incoming edges, #used or not
+  set_up_viable_edges(location, list_of_olaps, edges_for_nodes,edges_for_nodes_index, list_of_exact_olaps, num_of_exact_olaps);
+  vector<vector<vector<int> > > edges_for_nodes_RC(num_of_reads, vector<vector<int> >(2));//reverse complement list
+  set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
+ 
+  vector<vector<vector<int> > > unitigs;// contains all unitigs: unitig_number,edges
+  vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs 
+  find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
+
+  print_unis(unitigs,unitigs_info);
+  
+  return 0;
+}
+*/
