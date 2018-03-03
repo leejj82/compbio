@@ -312,37 +312,50 @@ public:
   int size;//total size
   int deleted_size;//deleted overlap size
   int exact_size;//exact overlap size
+  int exact_count;//temporary variable for counting used exact overlaps
+  
   vector<olap_2> list;//overlap list
   int f_read_loc[num_of_reads+1];//starting point of the f_read in the list_of_olaps
   vector<olap_2> exact;//save the exact overlaps in the list_of_olaps
   edges_node node[num_of_reads];
+  
   olaps_2();
 };
 
 olaps_2::olaps_2(){
-  size=0; deleted_size=0; exact_size=0;
+  size=0; deleted_size=0; exact_size=0;exact_size=0;
   fill(f_read_loc, f_read_loc+num_of_reads+1,0);
+}
+
+class u_node:public node{
+public:
+  int offset;
+  u_node();
+};
+
+
+class unitig{
+public:
+  int size;//# of nodes
+  int length;//# length
+  vector<u_node> nodes;//unitig nodes  
+  vector<u_node> f_nodes;//nodes from which the unitig is connected
+  vector<u_node> t_nodes;//nodes to which the unitig is connected
+  int f_nodes_size;//# of f_nodes
+  int t_nodes_size;//# of t_nodes
+  unitig();
+};
+
+unitig::unitig(){
+  f_nodes_size=0;t_nodes_size=0;
 }
 
 class unitigs{
 public:
-  int size;
-  //  int num_of_edges_for_unitigs=num_of_olaps-num_of_edges_to_delete;
-  //vector<vector<vector<int> > > unitigs;// contains all unitigs: unitig_number,edges
-  //  vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs
+  int size;// # of unitigs
+  vector<unitig> uni;
 };
-
-
-
-
-
-
-
-
-
-
-
-
+  
 void read_from_olaps(olaps_2 &l_olaps){
 
   char read_1_c[5],read_2_c[5], read_2_FR_c[5], offset_c[5];//read 1, read 2, Front/RC of read 2, offset
@@ -542,6 +555,7 @@ void set_up_viable_edges(olaps_2 &l_olaps){
   }
 }
 
+
 void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
 
   int i,j,used=1;
@@ -556,31 +570,26 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
   vector<int> temp(2);
 
   int sum;
-  
-  if (edges_for_nodes_index[starting_point][0]>0){ //there exists at least one edge connected to the node
-  
-    if (edges_for_nodes_index[starting_point][1]>=1){  //previous node
+
+  if (l_olaps.node[starting_point].total_edge_ct>0){ //there exists at least one edge connected to the node
+
+
+    
+
+    if (l_olaps.node[starting_point].f_edge_ct>0){ //previous node
 
       unitig_front.push_back(edges_for_nodes[starting_point][0]);
 
-      if (edges_for_nodes_index[starting_point][1]==1){//there is exactly one edge connecting with previous node
-	if (edges_for_nodes[starting_point][0][1]==Forward){//the previous node is in the forward order
+      if (l_olaps.node[starting_point].f_edge_ct==1){//there is exactly one edge connecting with previous node
 
-	  previous_node=edges_for_nodes[starting_point][0][0];
+	previous_node=l_olaps.node[starting_point].f_node[0].num;
 
-	  if (edges_for_nodes_index[previous_node][2]==1 ){//the previous node has exactly one outgoing edge
-	    edges_for_nodes_index[previous_node][3]=used;
+	if (l_olaps.node[previous_node].t_edge_ct==1){//the previous node has exactly one outgoing edge
+	  l_olaps.node[previous_node].used=1;
+	  if (l_olaps.node[starting_point].f_node[0].ori)//the previous node is in the forward order
 	    previous_read(previous_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
-	  }      
-	}
-	else{//the previous node is in the reverse complement order
-      
-	  previous_node=edges_for_nodes[starting_point][0][0];
-
-	  if (edges_for_nodes_index[previous_node][1]==1 ){//the previous node has exactly one outgoing edge
-	    edges_for_nodes_index[previous_node][3]=used;
+	  else //the previous node is in the reverse complement order
 	    previous_read(previous_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
-	  }
 	}
       }
     }
@@ -588,34 +597,27 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
       unitig_front.push_back(null_vector);
     }
 
-    if (edges_for_nodes_index[starting_point][2]>=1){//next node
+
+    if (l_olaps.node[starting_point].t_edge_ct>0){ //next node
 
       unitig_back.push_back(edges_for_nodes[starting_point][1]);
 
-      if (edges_for_nodes_index[starting_point][2]==1){//there is exactly one edge connecting with next node
-	if (edges_for_nodes[starting_point][1][3]==Forward){//the next node is in the forward order
+      if (l_olaps.node[starting_point].t_edge_ct==1){//there is exactly one edge connecting with next node
 
-	  next_node=edges_for_nodes[starting_point][1][2];
-
-	  if (edges_for_nodes_index[next_node][1]==1 ){//the next node has exactly one incoming edge
-	    edges_for_nodes_index[next_node][3]=used;
+	next_node=l_olaps.node[starting_point].t_node[0].num;
+ 	  
+	if (l_olaps.node[next_node].f_edge_ct==1){ //the next node has exactly one incoming edge
+	  l_olaps.node[next_node].used=1;
+	  if (l_olaps.node[starting_point].t_node[0].ori) //the next node is in the forward order
 	    next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
-	  }
-	}
-	else{//the next node is in the reverse complement order
-      
-	  next_node=edges_for_nodes[starting_point][1][2];
-
-	  if (edges_for_nodes_index[next_node][2]==1 ){//the next node has exactly one incoming edge
-	    edges_for_nodes_index[next_node][3]=used;
-	    next_read(next_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
-	  }
+	  else //the next node is in the reverse complement order
+      	    next_read(next_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
 	}
       }
     }
-    else { //there is no edge to the next node=>attach null vector
+    else  //there is no edge to the next node=>attach null vector
       unitig_back.push_back(null_vector);
-    }
+
     
     reverse(unitig_front.begin(),unitig_front.end());//reorganize unitig
     unitig_front.insert(unitig_front.end(),unitig_back.begin(),unitig_back.end());
@@ -675,7 +677,7 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
   }
 
   else {//single node case
-    cout<<"There exists a single node. Not implemented yet.";
+    cout<<"There exists a single node unitig. Not implemented yet.";
   }  
 }
 
