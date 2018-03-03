@@ -562,7 +562,7 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
   vector<vector<int> > unitig_front;
   vector<vector<int> > unitig_back;
   vector<vector<int> > unitig;
-  int Forward=1, RC=0;
+  bool forward;
   int previous_node, next_node;
 
   int array[5]={-1,-1,-1,-1,-1};
@@ -572,8 +572,6 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
   int sum;
 
   if (l_olaps.node[starting_point].total_edge_ct>0){ //there exists at least one edge connected to the node
-
-
     
 
     if (l_olaps.node[starting_point].f_edge_ct>0){ //previous node
@@ -584,12 +582,10 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
 
 	previous_node=l_olaps.node[starting_point].f_node[0].num;
 
-	if (l_olaps.node[previous_node].t_edge_ct==1){//the previous node has exactly one outgoing edge
+	if (l_olaps.node[previous_node].t_edge_ct==1){ //the previous node has exactly one outgoing edge
 	  l_olaps.node[previous_node].used=1;
-	  if (l_olaps.node[starting_point].f_node[0].ori)//the previous node is in the forward order
-	    previous_read(previous_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
-	  else //the previous node is in the reverse complement order
-	    previous_read(previous_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_front);
+	  forward=l_olaps.node[starting_point].f_node[0].ori; //the previous node is in the forward order(1 yes/ 0 no)
+	  previous_read(previous_node, forward,);
 	}
       }
     }
@@ -608,10 +604,8 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
  	  
 	if (l_olaps.node[next_node].f_edge_ct==1){ //the next node has exactly one incoming edge
 	  l_olaps.node[next_node].used=1;
-	  if (l_olaps.node[starting_point].t_node[0].ori) //the next node is in the forward order
-	    next_read(next_node, Forward, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
-	  else //the next node is in the reverse complement order
-      	    next_read(next_node, RC, edges_for_nodes,edges_for_nodes_RC,edges_for_nodes_index,unitig_back);
+	  forward=l_olaps.node[starting_point].t_node[0].ori; //the next node is in the forward order(1 yes/ 0 no)
+	  next_read(next_node, forward, );
 	}
       }
     }
