@@ -466,48 +466,78 @@ void record_edge_to_delete(olaps_2 &l_olaps){
   }
 }
 
-void edge_setup(int num, bool ori, int offset, edges_node &edge,bool f){
-
-  node temp_node;
-
-  temp_node.num=num;
-  temp_node.ori=ori;
-  temp_node.offset=offset;
-  if (f){
-    edge.f_node.push_back(temp_node); 
-    edge.f_edge_ct+=1;
-  }
-  else{
-    edge.t_node.push_back(temp_node); 
-    edge.t_edge_ct+=1;
-  }
-  edge.total_edge_ct+=1;
-}
 
 void set_up_viable_edges(olaps_2 &l_olaps){
 
   int i,j;
+  node temp_node;
   
   for (i=0;i<num_of_reads;i++){
     for (j=l_olaps.f_read_loc[i];j<l_olaps.f_read_loc[i+1];j++){
       if (l_olaps.list[j].deleted==0){ //not deleted
 	if (l_olaps.list[j].r_arrow){ //location of first read front
-	  
-	  edge_setup(l_olaps.list[j].t_read,l_olaps.list[j].ori_t, l_olaps.list[j].offset,l_olaps.node[i],0);
 
-	  if (l_olaps.list[j].ori_t)//second read is front oriented
-	    edge_setup(i, 1, l_olaps.list[j].offset, l_olaps.node[l_olaps.list[j].t_read],1);	    
-	  else //second read is reverse complement oriented
-	    edge_setup(i, 0, l_olaps.list[j].offset, l_olaps.node[l_olaps.list[j].t_read],0);	    
+	  temp_node.num=l_olaps.list[j].t_read;
+	  temp_node.ori=l_olaps.list[j].ori_t;
+	  temp_node.offset=l_olaps.list[j].offset;
+	  l_olaps.node[i].t_node.push_back(temp_node); 
+
+	  l_olaps.node[i].total_edge_ct+=1;
+	  l_olaps.node[i].t_edge_ct+=1;
+
+	  if (l_olaps.list[j].ori_t){//second read is front oriented
+
+	    temp_node.num=i;
+	    temp_node.ori=1;
+	    temp_node.offset=l_olaps.list[j].offset;
+	    l_olaps.node[l_olaps.list[j].t_read].f_node.push_back(temp_node);  
+	   
+	    l_olaps.node[l_olaps.list[j].t_read].total_edge_ct+=1;
+	    l_olaps.node[l_olaps.list[j].t_read].f_edge_ct+=1;	    
+	  }
+	  else{//second read is reverse complement oriented
+	 
+	    temp_node.num=i;
+	    temp_node.ori=0;
+	    temp_node.offset=l_olaps.list[j].offset;
+	    l_olaps.node[l_olaps.list[j].t_read].t_node.push_back(temp_node); 
+    	
+	    l_olaps.node[l_olaps.list[j].t_read].total_edge_ct+=1;
+	    l_olaps.node[l_olaps.list[j].t_read].t_edge_ct+=1;	    
+	  }
 	}
 	else { //location of first read back
+	
+	  temp_node.num=l_olaps.list[j].t_read;
+	  temp_node.ori=l_olaps.list[j].ori_t;
+	  temp_node.offset=-l_olaps.list[j].offset;
+	  l_olaps.node[i].f_node.push_back(temp_node); 
+	
+	  l_olaps.node[i].total_edge_ct+=1;
+	  l_olaps.node[i].f_edge_ct+=1;
 
-	  edge_setup(l_olaps.list[j].t_read, l_olaps.list[j].ori_t, -l_olaps.list[j].offset, l_olaps.node[i],1);
+	  if (l_olaps.list[j].ori_t){//second read is front oriented
+ 
+	    temp_node.num=i;
+	    temp_node.ori=1;
+	    temp_node.offset=-l_olaps.list[j].offset;
+	    l_olaps.node[l_olaps.list[j].t_read].t_node.push_back(temp_node); 
 
-	  if (l_olaps.list[j].ori_t)//second read is front oriented
-	    edge_setup(i,1,-l_olaps.list[j].offset, l_olaps.node[l_olaps.list[j].t_read],0);	    
-	  else//second read is reverse complement oriented
-	    edge_setup(i, 0, -l_olaps.list[j].offset, l_olaps.node[l_olaps.list[j].t_read],1);	    	  
+	    l_olaps.node[l_olaps.list[j].t_read].total_edge_ct+=1;
+	    l_olaps.node[l_olaps.list[j].t_read].t_edge_ct+=1;	    
+	  }
+	    
+	  
+	  else{//second read is reverse complement oriented
+	  	   
+	    temp_node.num=i;
+	    temp_node.ori=0;
+	    temp_node.offset=-l_olaps.list[j].offset;
+	    l_olaps.node[l_olaps.list[j].t_read].f_node.push_back(temp_node); 
+    	
+	    l_olaps.node[l_olaps.list[j].t_read].total_edge_ct+=1;
+	    l_olaps.node[l_olaps.list[j].t_read].f_edge_ct+=1;	    
+	  }
 	}
       }
     }
@@ -522,7 +552,7 @@ void find_prior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
 
   int starting_point=current_node.num; //number of current node
   bool c_forward=current_node.ori;//if the current node is Forward/Reverse Complement (1/0)
-  edges_node *c_node=&l_olaps.node[starting_point];//current node is c_node
+  edges_node c_node=l_olaps.node[starting_point];//current node is c_node
   
   node temp_node;
   bool condition;
@@ -531,13 +561,13 @@ void find_prior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
   uni.size++;
   
   if (c_forward){ //current node is in the forward order  
-    if ((*c_node).f_edge_ct>0){ //the current node has incoming edges    
-      vector<node> previous_nodes=(*c_node).f_node;
+    if (c_node.f_edge_ct>0){ //the current node has incoming edges    
+      vector<node> previous_nodes=c_node.f_node;
 
       condition=(previous_nodes[0].ori  && l_olaps.node[previous_nodes[0].num].t_edge_ct==1)
 	||(!previous_nodes[0].ori  && l_olaps.node[previous_nodes[0].num].f_edge_ct==1);//1 if the previous node has one outgoing edge
 
-      if ((*c_node).f_edge_ct==1 && condition ){ //the current node has exactly one incoming edge and the previous edge has exactly one outgoing edge
+      if (c_node.f_edge_ct==1 && condition ){ //the current node has exactly one incoming edge and the previous edge has exactly one outgoing edge
 	uni.nodes[uni.size-1].offset=previous_nodes[0].offset;
 	l_olaps.node[previous_nodes[0].num].used=1;
 	find_prior_nodes(previous_nodes[0],l_olaps, uni);
@@ -549,13 +579,13 @@ void find_prior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
     }
   }
   else{ //current node is in the reverse complement order
-    if ((*c_node).t_edge_ct>0){ //the current node has incoming edges    
-      vector<node> previous_nodes=(*c_node).t_node;
+    if (c_node.t_edge_ct>0){ //the current node has incoming edges    
+      vector<node> previous_nodes=c_node.t_node;
 
       condition=(!previous_nodes[0].ori  && l_olaps.node[previous_nodes[0].num].t_edge_ct==1)
 	||(previous_nodes[0].ori  && l_olaps.node[previous_nodes[0].num].f_edge_ct==1);//1 if the previous node has one outgoing edge
 
-      if ((*c_node).t_edge_ct==1 && condition ){ //the current node has exactly one incoming edge and the previous node has exactly one outgoing edge
+      if (c_node.t_edge_ct==1 && condition ){ //the current node has exactly one incoming edge and the previous node has exactly one outgoing edge
 	uni.nodes[uni.size-1].offset=previous_nodes[0].offset;
 	l_olaps.node[previous_nodes[0].num].used=1;
 	node p_node=previous_nodes[0];
@@ -574,21 +604,21 @@ void find_posterior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
 
   int starting_point=current_node.num; //number of current node
   bool c_forward=current_node.ori;//if the current node is Forward/Reverse Complement (1/0)
-  edges_node *c_node=&l_olaps.node[starting_point];//current node is c_node
+  edges_node c_node=l_olaps.node[starting_point];//current node is c_node
   
   node temp_node;
   bool condition;
   
+  uni.nodes.push_back(current_node);//insert current node in the unitig
+  uni.size++;
+  
   if (c_forward){ //current node is in the forward order  
-    if ((*c_node).t_edge_ct>0){ //the current node has outgoing edges    
-      vector<node> next_nodes=(*c_node).t_node;
+    if (c_node.t_edge_ct>0){ //the current node has outgoing edges    
+      vector<node> next_nodes=c_node.t_node;
       
       condition=(next_nodes[0].ori  && l_olaps.node[next_nodes[0].num].f_edge_ct==1)||(!next_nodes[0].ori  && l_olaps.node[next_nodes[0].num].t_edge_ct==1);//1 if the next node has one incoming edge
 
-      if ((*c_node).t_edge_ct==1 && condition ){ //the current node has exactly one outgoing edge and the next edge has exactly one incoming edge
-
-	uni.nodes.push_back(next_nodes[0]);//insert the next node in the unitig
-	uni.size++;
+      if (c_node.t_edge_ct==1 && condition ){ //the current node has exactly one outgoing edge and the next edge has exactly one incoming edge
 	l_olaps.node[next_nodes[0].num].used=1;
 	find_posterior_nodes(next_nodes[0],l_olaps, uni);
       }
@@ -600,18 +630,17 @@ void find_posterior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
   }
   else{ //current node is in the reverse complement order
     
-    if ((*c_node).f_edge_ct>0){ //the current node has outgoing edges    
-      vector<node> next_nodes=(*c_node).f_node;
+    if (c_node.f_edge_ct>0){ //the current node has outgoing edges    
+      vector<node> next_nodes=c_node.f_node;
+
 
       condition=(!next_nodes[0].ori  && l_olaps.node[next_nodes[0].num].f_edge_ct==1)||(next_nodes[0].ori  && l_olaps.node[next_nodes[0].num].t_edge_ct==1);//1 if the next node has one incoming edge
       
-      if ((*c_node).f_edge_ct==1 && condition ){ //the current node has exactly one outgoing edge and the next node has exactly one incoming edge
+      if (c_node.f_edge_ct==1 && condition ){ //the current node has exactly one outgoing edge and the next node has exactly one incoming edge
 
 	l_olaps.node[next_nodes[0].num].used=1;
 	node n_node=next_nodes[0];
 	n_node.ori=1-n_node.ori;
-	uni.nodes.push_back(n_node);//insert the next node in the unitig
-	uni.size++;
 	find_posterior_nodes(n_node,l_olaps, uni);
       }
       else{
@@ -629,20 +658,40 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
   node current_node;
   bool condition;
   
-  int connected_edges_to_the_current_node=l_olaps.node[starting_point].total_edge_ct;
- 
-  if (connected_edges_to_the_current_node >0){ //there exists at least one edge connected to the node   
+  edges_node c_node=l_olaps.node[starting_point];//current node is c_node
+  
+  if (c_node.total_edge_ct>0){ //there exists at least one edge connected to the node   
 
     unitig unit;//create a unitig
     unis.uni.push_back(unit); 
 
     current_node.num=starting_point;
     current_node.ori=1;
-    
-    find_prior_nodes(current_node,l_olaps, unis.uni[unis.size]);//find the nodes before and including the current node
-    reverse(unis.uni[unis.size].nodes.begin(),unis.uni[unis.size].nodes.end());//reorder the unitig 
-    find_posterior_nodes(current_node,l_olaps,unis.uni[unis.size]);//find the next nodes
+    find_prior_nodes(current_node,l_olaps, unis.uni[unis.size]);
 
+    reverse(unis.uni[unis.size].nodes.begin(),unis.uni[unis.size].nodes.end());//reorganize unitig
+
+    if (c_node.t_edge_ct>0){
+      vector<node> next_nodes=c_node.t_node;  //consider the next node in the same way   
+  
+      condition=(next_nodes[0].ori  && l_olaps.node[next_nodes[0].num].f_edge_ct==1)||(!next_nodes[0].ori  && l_olaps.node[next_nodes[0].num].t_edge_ct==1);
+
+      if (c_node.t_edge_ct==1 && condition ){
+	
+	l_olaps.node[next_nodes[0].num].used=1;
+	find_posterior_nodes(next_nodes[0],l_olaps,unis.uni[unis.size]);
+      }
+      unis.uni[unis.size].t_nodes=next_nodes;
+      unis.uni[unis.size].t_nodes_size=next_nodes.size();
+    }
+
+    unis.uni[unis.size].nodes[0].offset=0;//set the unitig start from zero
+
+    for (i=0;i<unis.uni[unis.size].size;i++){
+      unis.uni[unis.size].length+=unis.uni[unis.size].nodes[i].offset;
+    }
+    unis.size++;//count the number of unitigs    
+    
     /*
     if (read_exact_match_count<num_of_exact_olaps){
       for (i=1;i<unitig_front.size();i++){//insert exactly identical reads
@@ -684,16 +733,6 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
       }
     }
     */
-
-    
-
-
-    
-    unis.uni[unis.size].nodes[0].offset=0;//set the unitig starting from zero
-    for (i=0;i<unis.uni[unis.size].size;i++){//compute unitig lengths
-      unis.uni[unis.size].length+=unis.uni[unis.size].nodes[i].offset;
-    }
-    unis.size++;//count the number of unitigs   
   }
 
   else {//single node case
@@ -719,8 +758,10 @@ void find_unis(unitigs &unis){
   read_from_olaps(l_olaps);
   record_edge_to_delete(l_olaps);
   set_up_viable_edges(l_olaps);
+  // set_up_edges_RC(edges_for_nodes);
   find_unitigs(l_olaps, unis);
-  
+ 
+
 #if 1
   FILE * pFile;
   pFile = fopen ("lab01.temp","w");
@@ -783,7 +824,10 @@ void find_unis(unitigs &unis){
 
   fclose (pFile);
 #endif
+
+
 }
+
 
 void print_unis(unitigs &unis){
 
@@ -813,10 +857,14 @@ void print_unis(unitigs &unis){
   }
 }
 
+
 void find_and_print_unitigs(unitigs unis){
   find_unis(unis);
   print_unis(unis);
 };
+
+
+
 
 //
 //HW2 codes for finding unitigs end here
