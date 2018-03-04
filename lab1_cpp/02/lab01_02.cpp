@@ -386,7 +386,7 @@ void find_a_unitig(int &starting_point, vector<vector<vector<int> > > &edges_for
   int i,j,used=1;
   vector<vector<int> > unitig_front;
   vector<vector<int> > unitig_back;
-  vector<vector<int> > unitig;
+
   int Forward=1, RC=0;
   int previous_node, next_node;
 
