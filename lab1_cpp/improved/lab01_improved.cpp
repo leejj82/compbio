@@ -269,29 +269,6 @@ void find_and_print_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_o
 //
 //HW2 codes for finding unitigs start here
 //
-
-class olap_2: public olap {
-public:
-  bool r_arrow; //direction of arrow is right
-  bool deleted; //deleted=1
-};
-
-class olaps_2 {
-public:  
-  int size;//total size
-  int deleted_size;//deleted overlap size
-  int exact_size;//exact overlap size
-  vector<olap_2> list;//overlap list
-  int f_read_loc[num_of_reads+1];//starting point of the f_read in the list_of_olaps
-  vector<olap_2> exact;//save the exact overlaps in the list_of_olaps
-  olaps_2();
-};
-
-olaps_2::olaps_2(){
-  size=0; deleted_size=0; exact_size=0;
-  fill(f_read_loc, f_read_loc+num_of_reads+1,0);
-}
-
 class node {
 public:
   int num;//=read number 0-299
@@ -324,6 +301,29 @@ edges_node::edges_node(){
   used=0;
 }
 
+class olap_2: public olap {
+public:
+  bool r_arrow; //direction of arrow is right
+  bool deleted; //deleted=1
+};
+
+class olaps_2 {
+public:  
+  int size;//total size
+  int deleted_size;//deleted overlap size
+  int exact_size;//exact overlap size
+  vector<olap_2> list;//overlap list
+  int f_read_loc[num_of_reads+1];//starting point of the f_read in the list_of_olaps
+  vector<olap_2> exact;//save the exact overlaps in the list_of_olaps
+
+  edges_node nodes[num_of_reads];
+  olaps_2();
+};
+
+olaps_2::olaps_2(){
+  size=0; deleted_size=0; exact_size=0;
+  fill(f_read_loc, f_read_loc+num_of_reads+1,0);
+}
 
 class unitigs{
 public:
@@ -457,7 +457,7 @@ void record_edge_to_delete(olaps_2 &l_olaps){
 }
 
 
-void set_up_viable_edges(olaps_2 &l_olaps, edges_node e_for_nodes[num_of_reads]){
+void set_up_viable_edges(olaps_2 &l_olaps){
 
   int i,j;
   node temp_node;
@@ -469,57 +469,57 @@ void set_up_viable_edges(olaps_2 &l_olaps, edges_node e_for_nodes[num_of_reads])
 
 	  temp_node.num=l_olaps.list[j].t_read;
 	  temp_node.ori=l_olaps.list[j].ori_t;
-	  e_for_nodes[i].t_node.push_back(temp_node); 
+	  l_olaps.nodes[i].t_node.push_back(temp_node); 
 
-	  e_for_nodes[i].t_offset.push_back(l_olaps.list[j].offset);
+	  l_olaps.nodes[i].t_offset.push_back(l_olaps.list[j].offset);
 
-	  e_for_nodes[i].total_edge_ct+=1;
-	  e_for_nodes[i].t_edge_ct+=1;
+	  l_olaps.nodes[i].total_edge_ct+=1;
+	  l_olaps.nodes[i].t_edge_ct+=1;
 
 	  if (l_olaps.list[j].ori_t){//second read is front oriented
 
 	    temp_node.num=i;
 	    temp_node.ori=1;
-	    e_for_nodes[l_olaps.list[j].t_read].f_node.push_back(temp_node); 
+	    l_olaps.nodes[l_olaps.list[j].t_read].f_node.push_back(temp_node); 
 	    
-	    e_for_nodes[l_olaps.list[j].t_read].f_offset.push_back(l_olaps.list[j].offset);
+	    l_olaps.nodes[l_olaps.list[j].t_read].f_offset.push_back(l_olaps.list[j].offset);
 
-	    e_for_nodes[l_olaps.list[j].t_read].total_edge_ct+=1;
-	    e_for_nodes[l_olaps.list[j].t_read].f_edge_ct+=1;	    
+	    l_olaps.nodes[l_olaps.list[j].t_read].total_edge_ct+=1;
+	    l_olaps.nodes[l_olaps.list[j].t_read].f_edge_ct+=1;	    
 	  }
 	  else{//second read is reverse complement oriented
 	 
 	    temp_node.num=i;
 	    temp_node.ori=0;
-	    e_for_nodes[l_olaps.list[j].t_read].t_node.push_back(temp_node); 
+	    l_olaps.nodes[l_olaps.list[j].t_read].t_node.push_back(temp_node); 
     	
-	    e_for_nodes[l_olaps.list[j].t_read].t_offset.push_back(l_olaps.list[j].offset);
+	    l_olaps.nodes[l_olaps.list[j].t_read].t_offset.push_back(l_olaps.list[j].offset);
 
-	    e_for_nodes[l_olaps.list[j].t_read].total_edge_ct+=1;
-	    e_for_nodes[l_olaps.list[j].t_read].t_edge_ct+=1;	    
+	    l_olaps.nodes[l_olaps.list[j].t_read].total_edge_ct+=1;
+	    l_olaps.nodes[l_olaps.list[j].t_read].t_edge_ct+=1;	    
 	  }
 	}
 	else { //location of first read back
 	
 	  temp_node.num=l_olaps.list[j].t_read;
 	  temp_node.ori=l_olaps.list[j].ori_t;
-	  e_for_nodes[i].f_node.push_back(temp_node); 
+	  l_olaps.nodes[i].f_node.push_back(temp_node); 
 	
-	  e_for_nodes[i].f_offset.push_back(-l_olaps.list[j].offset);
+	  l_olaps.nodes[i].f_offset.push_back(-l_olaps.list[j].offset);
 
-	  e_for_nodes[i].total_edge_ct+=1;
-	  e_for_nodes[i].f_edge_ct+=1;
+	  l_olaps.nodes[i].total_edge_ct+=1;
+	  l_olaps.nodes[i].f_edge_ct+=1;
 
 	  if (l_olaps.list[j].ori_t){//second read is front oriented
  
 	    temp_node.num=i;
 	    temp_node.ori=1;
-	    e_for_nodes[l_olaps.list[j].t_read].t_node.push_back(temp_node); 
+	    l_olaps.nodes[l_olaps.list[j].t_read].t_node.push_back(temp_node); 
 
-	    e_for_nodes[l_olaps.list[j].t_read].t_offset.push_back(-l_olaps.list[j].offset);
+	    l_olaps.nodes[l_olaps.list[j].t_read].t_offset.push_back(-l_olaps.list[j].offset);
 
-    	    e_for_nodes[l_olaps.list[j].t_read].total_edge_ct+=1;
-	    e_for_nodes[l_olaps.list[j].t_read].t_edge_ct+=1;	    
+	    l_olaps.nodes[l_olaps.list[j].t_read].total_edge_ct+=1;
+	    l_olaps.nodes[l_olaps.list[j].t_read].t_edge_ct+=1;	    
 	  }
 	    
 	  
@@ -527,12 +527,12 @@ void set_up_viable_edges(olaps_2 &l_olaps, edges_node e_for_nodes[num_of_reads])
 	  	   
 	    temp_node.num=i;
 	    temp_node.ori=0;
-	    e_for_nodes[l_olaps.list[j].t_read].f_node.push_back(temp_node); 
+	    l_olaps.nodes[l_olaps.list[j].t_read].f_node.push_back(temp_node); 
     	
-	    e_for_nodes[l_olaps.list[j].t_read].f_offset.push_back(-l_olaps.list[j].offset);
+	    l_olaps.nodes[l_olaps.list[j].t_read].f_offset.push_back(-l_olaps.list[j].offset);
 
-    	    e_for_nodes[l_olaps.list[j].t_read].total_edge_ct+=1;
-	    e_for_nodes[l_olaps.list[j].t_read].f_edge_ct+=1;	    
+	    l_olaps.nodes[l_olaps.list[j].t_read].total_edge_ct+=1;
+	    l_olaps.nodes[l_olaps.list[j].t_read].f_edge_ct+=1;	    
 	  }
 	}
       }
@@ -540,7 +540,7 @@ void set_up_viable_edges(olaps_2 &l_olaps, edges_node e_for_nodes[num_of_reads])
   }
 
   for (i=0;i<l_olaps.exact_size;i++){
-    e_for_nodes[l_olaps.exact[i].t_read].used=1;
+    l_olaps.nodes[l_olaps.exact[i].t_read].used=1;
   }
 }
 
