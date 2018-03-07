@@ -666,52 +666,6 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
     find_prior_nodes(current_node,l_olaps, unis.uni[unis.size]);//find the nodes before and including the current node
     reverse(unis.uni[unis.size].nodes.begin(),unis.uni[unis.size].nodes.end());//reorder the unitig 
     find_posterior_nodes(current_node,l_olaps,unis.uni[unis.size]);//find the next nodes
-
-    /*
-    if (read_exact_match_count<num_of_exact_olaps){
-      for (i=1;i<unitig_front.size();i++){//insert exactly identical reads
-	for (j=0;j<num_of_exact_olaps;j++){
-	  if(unitig_front[i][0]==list_of_exact_olaps[j][0]){
-
-	    read_exact_match_count++;
-	    if (unitig_front[i][0]!=-1){//not the inserted null vector
-	      if(unitig_front[i][1]==1){//front order
-	   
-		vector<int> vec;
-		vec.push_back(unitig_front[i][0]);
-		vec.push_back(1);
-		vec.push_back(list_of_exact_olaps[j][1]);
-		vec.push_back(list_of_exact_olaps[j][2]);
-		vec.push_back(0);
-
-		unitig_front[i][0]=list_of_exact_olaps[j][1];
-		unitig_front[i][1]=list_of_exact_olaps[j][2];
-		unitig_front.insert(unitig_front.begin()+i,vec);
-	      }
-	      else {//reverse complement order
-	   
-		vector<int> vec;
-		vec.push_back(unitig_front[i][0]);
-		vec.push_back(0);
-		vec.push_back(list_of_exact_olaps[j][1]);
-		vec.push_back(1-list_of_exact_olaps[j][2]);
-		vec.push_back(0);
-
-		unitig_front[i][0]=list_of_exact_olaps[j][1];
-		unitig_front[i][1]=1-list_of_exact_olaps[j][2];
-	    
-		unitig_front.insert(unitig_front.begin()+i,vec);
-	      }
-	    }
-	  }
-	}
-      }
-    }
-    */
-
-    
-
-
     
     unis.uni[unis.size].nodes[0].offset=0;//set the unitig starting from zero
     for (i=0;i<unis.uni[unis.size].size;i++){//compute unitig lengths
@@ -743,70 +697,7 @@ void find_unis(unitigs &unis){
   read_from_olaps(l_olaps);
   record_edge_to_delete(l_olaps);
   set_up_viable_edges(l_olaps);
-  find_unitigs(l_olaps, unis);
-  
-#if 1
-  FILE * pFile;
-  pFile = fopen ("lab01.temp","w");
-
-  int s_um=0;
-  for(int i=0;i<unis.size;i++){
-    s_um+=unis.uni[i].size;
-  }
-  
-
-  fprintf (pFile, "%d %d \n",unis.size, s_um);  
-
-  for (int i=0;i<unis.size;i++){
-
-    fprintf (pFile, "%d %d %d %d \n", unis.uni[i].size,  unis.uni[i].length,  unis.uni[i].f_nodes_size, unis.uni[i].t_nodes_size );
-
-    fprintf (pFile, "\n");
-  }
-  
-  for (int i=0;i<unis.size;i++){
-    for (int j=0;j<unis.uni[i].size;j++){
-      fprintf (pFile, "%d %d %d \n", unis.uni[i].nodes[j].num, unis.uni[i].nodes[j].ori, unis.uni[i].nodes[j].offset );
-    }
-    fprintf (pFile, "\n");
-  }
-
-   /*
- 
-  for (int i=0;i<num_of_reads;i++){
-    fprintf (pFile, "%d %d %d %d ",i,l_olaps.node[i].total_edge_ct,l_olaps.node[i].f_edge_ct,l_olaps.node[i].t_edge_ct);
-    for (int j=0;j<l_olaps.node[i].f_edge_ct;j++)
-      fprintf (pFile, "%d %d %d 1 %d ",  l_olaps.node[i].f_node[j].num,l_olaps.node[i].f_node[j].ori ,i,l_olaps.node[i].f_node[j].offset);
-    fprintf (pFile, "\n");
-    fprintf (pFile, "%d %d %d %d ",i,l_olaps.node[i].total_edge_ct,l_olaps.node[i].f_edge_ct,l_olaps.node[i].t_edge_ct);
-
-    for (int j=0;j<l_olaps.node[i].t_edge_ct;j++)
-      fprintf (pFile, "%d 1 %d %d %d ",i, l_olaps.node[i].t_node[j].num,l_olaps.node[i].t_node[j].ori, l_olaps.node[i].t_node[j].offset);
-    fprintf (pFile, "\n");
-  }
-
-  fprintf (pFile, "%d %d %d  \n",l_olaps.size, l_olaps.exact_size, l_olaps.deleted_size);
-  fprintf (pFile, "%d %d %d  \n",l_olaps.exact[0].f_read, l_olaps.exact[0].t_read, l_olaps.exact[0].ori_t);
-  
-  for (int i=0;i<l_olaps.size;i++)
-    fprintf (pFile, "%d %d %d %d %d %d \n",l_olaps.list[i].f_read, l_olaps.list[i].t_read, l_olaps.list[i].ori_t,l_olaps.list[i].offset,l_olaps.list[i].r_arrow,l_olaps.list[i].deleted);
-  
-  for (int i=0;i<num_of_reads+1;i++)
-    fprintf (pFile, "%d \n",l_olaps.f_read_loc[i]);
-
-     
-    for (int i=0;i<list_of_olaps.size;i++){
-    fprintf (pFile, " %03d  ",list_of_olaps.list[i].f_read+1);
-    fprintf (pFile, "%03d  ",list_of_olaps.list[i].t_read+1);
-    if (list_of_olaps.list[i].ori_t)
-    fprintf (pFile, "F  ");
-    else
-    fprintf (pFile, "R  ");
-    fprintf (pFile, "%*d\n",4,list_of_olaps.list[i].offset);
-    }*/
-
-  fclose (pFile);
-#endif
+  find_unitigs(l_olaps, unis);  
 }
 
 void print_unis(unitigs &unis){
@@ -868,33 +759,68 @@ int main(){
 }
 
 
+  /*
+#if
+  FILE * pFile;
+  pFile = fopen ("lab01.temp","w");
 
-
-/*
- 
-void set_up_edges_RC(vector<vector<vector<int> > > &edges_for_nodes, vector<vector<vector<int> > > &edges_for_nodes_RC){
-
-  int temp;
-  for (int i=0;i<edges_for_nodes.size();i++){
-    for (int j=0;j<2;j++){
-      if (edges_for_nodes[i][j].size()>0){
-	edges_for_nodes_RC[i][1-j]=edges_for_nodes[i][j];
-	for (int k=0;k<edges_for_nodes[i][j].size()/5;k++){
-	  temp=edges_for_nodes_RC[i][1-j][5*k];
-	  edges_for_nodes_RC[i][1-j][5*k]=edges_for_nodes_RC[i][1-j][5*k+2];
-	  edges_for_nodes_RC[i][1-j][5*k+2]=temp;
-
-	  temp=edges_for_nodes_RC[i][1-j][5*k+1];    
-	  edges_for_nodes_RC[i][1-j][5*k+1]=1-edges_for_nodes_RC[i][1-j][5*k+3];
-	  edges_for_nodes_RC[i][1-j][5*k+3]=1-temp;
-	}
-      }
-    }
+  int s_um=0;
+  for(int i=0;i<unis.size;i++){
+    s_um+=unis.uni[i].size;
   }
-}
+  
+
+  fprintf (pFile, "%d %d \n",unis.size, s_um);  
+
+  for (int i=0;i<unis.size;i++){
+
+    fprintf (pFile, "%d %d %d %d \n", unis.uni[i].size,  unis.uni[i].length,  unis.uni[i].f_nodes_size, unis.uni[i].t_nodes_size );
+
+    fprintf (pFile, "\n");
+  }
+  
+  for (int i=0;i<unis.size;i++){
+    for (int j=0;j<unis.uni[i].size;j++){
+      fprintf (pFile, "%d %d %d \n", unis.uni[i].nodes[j].num, unis.uni[i].nodes[j].ori, unis.uni[i].nodes[j].offset );
+    }
+    fprintf (pFile, "\n");
+  }
+ 
+  for (int i=0;i<num_of_reads;i++){
+    fprintf (pFile, "%d %d %d %d ",i,l_olaps.node[i].total_edge_ct,l_olaps.node[i].f_edge_ct,l_olaps.node[i].t_edge_ct);
+    for (int j=0;j<l_olaps.node[i].f_edge_ct;j++)
+      fprintf (pFile, "%d %d %d 1 %d ",  l_olaps.node[i].f_node[j].num,l_olaps.node[i].f_node[j].ori ,i,l_olaps.node[i].f_node[j].offset);
+    fprintf (pFile, "\n");
+    fprintf (pFile, "%d %d %d %d ",i,l_olaps.node[i].total_edge_ct,l_olaps.node[i].f_edge_ct,l_olaps.node[i].t_edge_ct);
+
+    for (int j=0;j<l_olaps.node[i].t_edge_ct;j++)
+      fprintf (pFile, "%d 1 %d %d %d ",i, l_olaps.node[i].t_node[j].num,l_olaps.node[i].t_node[j].ori, l_olaps.node[i].t_node[j].offset);
+    fprintf (pFile, "\n");
+  }
+
+  fprintf (pFile, "%d %d %d  \n",l_olaps.size, l_olaps.exact_size, l_olaps.deleted_size);
+  fprintf (pFile, "%d %d %d  \n",l_olaps.exact[0].f_read, l_olaps.exact[0].t_read, l_olaps.exact[0].ori_t);
+  
+  for (int i=0;i<l_olaps.size;i++)
+    fprintf (pFile, "%d %d %d %d %d %d \n",l_olaps.list[i].f_read, l_olaps.list[i].t_read, l_olaps.list[i].ori_t,l_olaps.list[i].offset,l_olaps.list[i].r_arrow,l_olaps.list[i].deleted);
+  
+  for (int i=0;i<num_of_reads+1;i++)
+    fprintf (pFile, "%d \n",l_olaps.f_read_loc[i]);
+
+     
+    for (int i=0;i<list_of_olaps.size;i++){
+    fprintf (pFile, " %03d  ",list_of_olaps.list[i].f_read+1);
+    fprintf (pFile, "%03d  ",list_of_olaps.list[i].t_read+1);
+    if (list_of_olaps.list[i].ori_t)
+    fprintf (pFile, "F  ");
+    else
+    fprintf (pFile, "R  ");
+    fprintf (pFile, "%*d\n",4,list_of_olaps.list[i].offset);
+    }
+
+  fclose (pFile);
+  #endif
 */
-
-
 
   
 
