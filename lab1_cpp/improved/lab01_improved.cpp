@@ -285,11 +285,13 @@ class edges_node {
 public:
   vector<node> f_node;//nodes from which edges come to this node  
   vector<node> t_node;//nodes to which edges go from this node
-
+  
   int total_edge_ct;// #of total edges connected to the node
   int f_edge_ct;// # of edges coming to the node
   int t_edge_ct;//# of edges going out from the node
   bool used;//used=1 if the node is used
+
+  int exact_copy_count;
   edges_node();
 };
 
@@ -298,6 +300,7 @@ edges_node::edges_node(){
   f_edge_ct=0;
   t_edge_ct=0;
   used=0;
+  exact_copy_count=0;
 }
 
 class olap_2: public olap {
@@ -311,7 +314,6 @@ public:
   int size;//total size
   int deleted_size;//deleted overlap size
   int exact_size;//exact overlap size
-  int exact_count;//temporary variable for counting used exact overlaps
   
   vector<olap_2> list;//overlap list
   int f_read_loc[num_of_reads+1];//starting point of the f_read in the list_of_olaps
@@ -515,21 +517,44 @@ void set_up_viable_edges(olaps_2 &l_olaps){
 
   for (i=0;i<l_olaps.exact_size;i++){
     l_olaps.node[l_olaps.exact[i].t_read].used=1;
+    if(!l_olaps.node[l_olaps.exact[i].f_read].used)
+      l_olaps.node[l_olaps.exact[i].f_read].exact_copy_count+=1;
+    else
+      cout<<" there are multiple exact reads which need to be treated";
+  }
+}
+
+void insert_node_in_uni (node &current_node, olaps_2 &l_olaps,unitig &uni ){
+  uni.nodes.push_back(current_node);//insert current node in the unitig
+  uni.size++;
+  if (l_olaps.node[current_node.num].exact_copy_count>0){
+    node temp_node;
+    for (int i=0;i<l_olaps.exact_size;i++){
+      temp_node.num=l_olaps.exact[i].t_read;
+      if (current_node.ori)
+	temp_node.ori=l_olaps.exact[i].ori_t;
+      else
+	temp_node.ori=1-l_olaps.exact[i].ori_t;
+      temp_node.offset=0;
+      uni.nodes.push_back(temp_node);
+      uni.size++;
+    }
   }
 }
 
 void find_prior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
 
+  int i;
+  
   int starting_point=current_node.num; //number of current node
   bool c_forward=current_node.ori;//if the current node is Forward/Reverse Complement (1/0)
   edges_node *c_node=&l_olaps.node[starting_point];//current node is c_node
   
   node temp_node;
   bool condition;
-  
-  uni.nodes.push_back(current_node);//insert current node in the unitig
-  uni.size++;
-  
+
+  insert_node_in_uni(current_node, l_olaps, uni);
+
   if (c_forward){ //current node is in the forward order  
     if ((*c_node).f_edge_ct>0){ //the current node has incoming edges    
       vector<node> previous_nodes=(*c_node).f_node;
@@ -587,8 +612,8 @@ void find_posterior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
 
       if ((*c_node).t_edge_ct==1 && condition ){ //the current node has exactly one outgoing edge and the next edge has exactly one incoming edge
 
-	uni.nodes.push_back(next_nodes[0]);//insert the next node in the unitig
-	uni.size++;
+	insert_node_in_uni(next_nodes[0], l_olaps, uni);
+
 	l_olaps.node[next_nodes[0].num].used=1;
 	find_posterior_nodes(next_nodes[0],l_olaps, uni);
       }
@@ -610,8 +635,7 @@ void find_posterior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
 	l_olaps.node[next_nodes[0].num].used=1;
 	node n_node=next_nodes[0];
 	n_node.ori=1-n_node.ori;
-	uni.nodes.push_back(n_node);//insert the next node in the unitig
-	uni.size++;
+	insert_node_in_uni(n_node, l_olaps, uni);
 	find_posterior_nodes(n_node,l_olaps, uni);
       }
       else{
@@ -635,7 +659,7 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
 
     unitig unit;//create a unitig
     unis.uni.push_back(unit); 
-
+    
     current_node.num=starting_point;
     current_node.ori=1;
     
