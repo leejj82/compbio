@@ -562,7 +562,6 @@ void find_prior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
   node temp_node;
   bool condition;
 
-  insert_node_in_uni(current_node, l_olaps, uni);
 
   if (c_forward){ //current node is in the forward order  
     if ((*c_node).f_edge_ct>0){ //the current node has incoming edges    
@@ -574,6 +573,9 @@ void find_prior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
       if ((*c_node).f_edge_ct==1 && condition ){ //the current node has exactly one incoming edge and the previous edge has exactly one outgoing edge
 	uni.nodes[uni.size-1].offset=previous_nodes[0].offset;
 	l_olaps.node[previous_nodes[0].num].used=1;
+
+	insert_node_in_uni(previous_nodes[0], l_olaps, uni);
+
 	find_prior_nodes(previous_nodes[0],l_olaps, uni);
       }
       else{
@@ -585,7 +587,7 @@ void find_prior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
   else{ //current node is in the reverse complement order
     if ((*c_node).t_edge_ct>0){ //the current node has incoming edges    
       vector<node> previous_nodes=(*c_node).t_node;
-
+      
       condition=(!previous_nodes[0].ori  && l_olaps.node[previous_nodes[0].num].t_edge_ct==1)
 	||(previous_nodes[0].ori  && l_olaps.node[previous_nodes[0].num].f_edge_ct==1);//1 if the previous node has one outgoing edge
 
@@ -594,11 +596,15 @@ void find_prior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
 	l_olaps.node[previous_nodes[0].num].used=1;
 	node p_node=previous_nodes[0];
 	p_node.ori=1-p_node.ori;
+	insert_node_in_uni(p_node, l_olaps, uni);
 	find_prior_nodes(p_node,l_olaps, uni);
       }
       else{
 	uni.f_nodes=previous_nodes;
 	uni.f_nodes_size=previous_nodes.size();
+	for (i=0;i<uni.f_nodes_size;i++){
+	  uni.f_nodes[i].ori=!uni.f_nodes[i].ori;
+	}
       }
     }
   }
@@ -606,6 +612,8 @@ void find_prior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
 
 void find_posterior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
 
+  int i;
+  
   int starting_point=current_node.num; //number of current node
   bool c_forward=current_node.ori;//if the current node is Forward/Reverse Complement (1/0)
   edges_node *c_node=&l_olaps.node[starting_point];//current node is c_node
@@ -650,6 +658,9 @@ void find_posterior_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni){
       else{
 	uni.t_nodes=next_nodes;
 	uni.t_nodes_size=next_nodes.size();
+	for (i=0;i<uni.t_nodes_size;i++){
+	  uni.t_nodes[i].ori=!uni.t_nodes[i].ori;
+	}
       }
     }
   }
@@ -671,6 +682,8 @@ void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
     
     current_node.num=starting_point;
     current_node.ori=1;
+
+    insert_node_in_uni(current_node, l_olaps, unis.uni[unis.size]);
     
     find_prior_nodes(current_node,l_olaps, unis.uni[unis.size]);//find the nodes before and including the current node
     reverse(unis.uni[unis.size].nodes.begin(),unis.uni[unis.size].nodes.end());//reorder the unitig 
@@ -791,6 +804,34 @@ void find_and_print_contigs(read_raw list_of_reads[num_of_reads], unitigs &unis,
     fprintf (pFile, "\n");
   }
 
+
+    fprintf (pFile, "\n\n\n\n\n");
+
+
+
+
+    
+  int s_um=0;
+  for(int i=0;i<unis.size;i++){
+    s_um+=unis.uni[i].size;
+  }
+
+  fprintf (pFile, "%d %d \n",unis.size, s_um);  
+
+  for (int i=0;i<unis.size;i++){
+
+    fprintf (pFile, "%d %d %d %d \n", unis.uni[i].size,  unis.uni[i].length,  unis.uni[i].f_nodes_size, unis.uni[i].t_nodes_size );
+
+    fprintf (pFile, "\n");
+  }
+  
+  for (int i=0;i<unis.size;i++){
+    for (int j=0;j<unis.uni[i].size;j++){
+      fprintf (pFile, "%d %d %d \n", unis.uni[i].nodes[j].num, unis.uni[i].nodes[j].ori, unis.uni[i].nodes[j].offset );
+    }
+    fprintf (pFile, "\n");
+  }
+
   fclose(pFile);
 #endif
 
@@ -828,8 +869,6 @@ int main(){
 }
 
 /*
-}
-  
 
 int count_the_num_of_connections(vector<vector<vector<int> > > &unitigs,int &num_of_unitigs,vector<vector<int> > &unitigs_info, int unitigs_con_count[][3]){
 
@@ -1527,27 +1566,8 @@ return 0;
   FILE * pFile;
   pFile = fopen ("lab01.temp","w");
 
-  int s_um=0;
-  for(int i=0;i<unis.size;i++){
-    s_um+=unis.uni[i].size;
-  }
   
 
-  fprintf (pFile, "%d %d \n",unis.size, s_um);  
-
-  for (int i=0;i<unis.size;i++){
-
-    fprintf (pFile, "%d %d %d %d \n", unis.uni[i].size,  unis.uni[i].length,  unis.uni[i].f_nodes_size, unis.uni[i].t_nodes_size );
-
-    fprintf (pFile, "\n");
-  }
-  
-  for (int i=0;i<unis.size;i++){
-    for (int j=0;j<unis.uni[i].size;j++){
-      fprintf (pFile, "%d %d %d \n", unis.uni[i].nodes[j].num, unis.uni[i].nodes[j].ori, unis.uni[i].nodes[j].offset );
-    }
-    fprintf (pFile, "\n");
-  }
  
   for (int i=0;i<num_of_reads;i++){
     fprintf (pFile, "%d %d %d %d ",i,l_olaps.node[i].total_edge_ct,l_olaps.node[i].f_edge_ct,l_olaps.node[i].t_edge_ct);
