@@ -344,17 +344,18 @@ public:
   int size;//# of nodes
   int length;//# length
   vector<node> nodes;//unitig nodes  
+
   vector<node> f_nodes;//nodes from which the unitig is connected
   vector<node> t_nodes;//nodes to which the unitig is connected
-  int f_nodes_size;//# of f_nodes
-  int t_nodes_size;//# of t_nodes
+  int f_size;//# of f_nodes/f_unis
+  int t_size;//# of t_nodes/t_unis
   unitig();
 };
 
 unitig::unitig(){
   size=0;
   length=read_len;
-  f_nodes_size=0;t_nodes_size=0;
+  f_size=0;t_size=0;
 }
 
 class unitigs{
@@ -562,17 +563,17 @@ void insert_boundary_nodes(vector<node> &next_nodes,unitig &uni, bool prior, boo
   
   if(prior){//previous nodes
     uni.f_nodes=next_nodes;
-    uni.f_nodes_size=next_nodes.size();
+    uni.f_size=next_nodes.size();
     if(RC){//reverse complement case
-      for (i=0;i<uni.f_nodes_size;i++)
+      for (i=0;i<uni.f_size;i++)
 	uni.f_nodes[i].ori=!uni.f_nodes[i].ori;
     }
   }
   else{
     uni.t_nodes=next_nodes;
-    uni.t_nodes_size=(int)(next_nodes.size());
+    uni.t_size=(int)(next_nodes.size());
     if(RC){
-      for (i=0;i<uni.t_nodes_size;i++)
+      for (i=0;i<uni.t_size;i++)
 	uni.t_nodes[i].ori=!uni.t_nodes[i].ori;
     }
   }
@@ -747,14 +748,10 @@ void print_unis(unitigs &unis){
 #else
   pFile = fopen ("lab01.unis","w");
 #endif
- 	
 	
   for (i=0;i<unis.size;i++){
- 
     fprintf (pFile, "UNI  %02d %*d %*d\n", i+1, 5,unis.uni[i].size,6, unis.uni[i].length);//print the title
-
     for (j=0;j<unis.uni[i].size;j++){//print the rest
-      
       fprintf (pFile, "  %03d  ",unis.uni[i].nodes[j].num+1);
       if (unis.uni[i].nodes[j].ori)
 	fprintf (pFile, "F  ");
@@ -779,53 +776,141 @@ void find_and_print_unitigs(unitigs &unis){
 //
 //HW3 codes for finding contigs start here
 //
-
-class con{
+class con:public unitigs{
 public:
-  int i;
+  vector<unitig> uni_rc;// reverse complements of unis
+
+  int length;
+  vector<node> contig_unis_order;//unitigs order in contig
+  vector<char> contig;
+  con();
+  void copy_from_unis(unitigs &);
+  void set_up_nodes_locations();
 };
-  
-void find_contigs(read_raw list_of_reads[num_of_reads], unitigs &unis,con &contigs){
 
-  
+con::con(){
+  length=0;
+}
+
+void con::copy_from_unis(unitigs &unis){
+  size=unis.size;
+  uni=unis.uni;
 }
 
 
 
 
-void print_contigs(con &contigs){ 
+
+
+void find_unis_conn (node &Node, unitigs &contig,bool F){
+ 
+  for (int j=0;j<contig.size;j++){
+    if (F){
+      if(Node.num==contig.uni[j].nodes[contig.uni[j].size-1].num){
+	if(Node.ori==contig.uni[j].nodes[contig.uni[j].size-1].ori){
+	  Node.num=j;
+	  Node.ori=1;
+	  break;
+	}
+      }
+      else if(Node.num==contig.uni[j].nodes[0].num){
+	if(Node.ori!=contig.uni[j].nodes[0].ori){
+	  Node.num=j;
+	  Node.ori=0;
+	  break;
+	}
+      }	
+    }
+    else {
+      if (Node.num==contig.uni[j].nodes[contig.uni[j].size-1].num){
+	if(Node.ori!=contig.uni[j].nodes[contig.uni[j].size-1].ori){
+	  Node.num=j;
+	  Node.ori=0;
+	  break;
+	}
+      }
+      else if(Node.num==contig.uni[j].nodes[0].num){
+	if(Node.ori==contig.uni[j].nodes[0].ori){
+	  Node.num=j;
+	  Node.ori=1;
+	  break;
+	}
+      }	
+    }
+  }
+}
+
+void set_up_uni_rc_and_node_location(con &contig){ //calculate node locations in the unitigs and find and save reverse complement unitigs
+
+  int i;
+  
+  for(int i=0;i<contig.size;i++){
+    contig.uni_rc[i].size=contig.uni[i].size;
+    contig.uni_rc[i].length=contig.uni[i].length;
+    contig.uni_rc[i].f_nodes=contig.uni[i].t_nodes;
+    contig.uni_rc[i].t_nodes=contig.uni[i].f_nodes;
+    
+    
+  }
+}
+
+void set_up_unis_connections(con &contig){//find connections between unitigs and save the info in contig
+
+  int i,k;
+  bool F=1,T=0;//F from_unitig T to_unitig
+
+  for (i=0;i<contig.size;i++){
+    for (k=0;k<contig.uni[i].f_size;k++)
+      find_unis_conn(contig.uni[i].f_nodes[k],contig,F);
+    for (k=0;k<contig.uni[i].t_size;k++)
+      find_unis_conn(contig.uni[i].t_nodes[k],contig,T);
+  }
+}
+
+void set_up_contig(unitigs &unis, con &contig){
+  contig.copy_from_unis(unis);//copy unis to contig
+  set_up_unis_connections(contig);//set up connections between unitigs
+  set_up_uni_rc_and_node_location(contig);//calculate node locations in the unitigs and find and save reverse complement unitigs
+}
+
+void find_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,con &contig){
+  set_up_contig(unis, contig);//copy relevant info from unis, create reverse complement unitigs, find connections between unitigs  
+}
+
+void print_contig(con &contig){ 
 
 }
 
-void find_and_print_contigs(read_raw list_of_reads[num_of_reads], unitigs &unis,con &contigs){
-  find_contigs(list_of_reads, unis, contigs);
-  print_contigs(contigs);
+void find_and_print_a_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,con &contig){
+  find_contig(list_of_reads, unis, contig);
+  print_contig(contig);
 
 #if 1
   FILE * pFile;
   pFile = fopen ("lab01.temp","w");
 
   for (int i=0;i<unis.size;i++){
-      fprintf (pFile, "%d %d \n", unis.uni[i].f_nodes_size, unis.uni[i].t_nodes_size );
-    
-    for (int j=0;j<unis.uni[i].f_nodes_size;j++){
+    fprintf (pFile, "%d %d \n", unis.uni[i].f_size, unis.uni[i].t_size );
+    for (int j=0;j<unis.uni[i].f_size;j++){
       fprintf (pFile, "%d %d \n", unis.uni[i].f_nodes[j].num, unis.uni[i].f_nodes[j].ori );
+    }
+    for (int j=0;j<unis.uni[i].t_size;j++){
+      fprintf (pFile, "%d %d \n", unis.uni[i].t_nodes[j].num, unis.uni[i].t_nodes[j].ori );
     }
     fprintf (pFile, "\n");
 
-    for (int j=0;j<unis.uni[i].t_nodes_size;j++){
-      fprintf (pFile, "%d %d \n", unis.uni[i].t_nodes[j].num, unis.uni[i].t_nodes[j].ori );
+    fprintf (pFile, "%d %d \n", contig.uni[i].f_size, contig.uni[i].t_size );
+    for (int j=0;j<contig.uni[i].f_size;j++){
+      fprintf (pFile, "%d %d \n", contig.uni[i].f_nodes[j].num, contig.uni[i].f_nodes[j].ori );
+    }
+    for (int j=0;j<contig.uni[i].t_size;j++){
+      fprintf (pFile, "%d %d \n", contig.uni[i].t_nodes[j].num, contig.uni[i].t_nodes[j].ori );
     }
     fprintf (pFile, "\n");
   }
 
+  fprintf (pFile, "\n\n\n\n\n");
 
-    fprintf (pFile, "\n\n\n\n\n");
-
-
-
-
-    
   int s_um=0;
   for(int i=0;i<unis.size;i++){
     s_um+=unis.uni[i].size;
@@ -835,7 +920,7 @@ void find_and_print_contigs(read_raw list_of_reads[num_of_reads], unitigs &unis,
 
   for (int i=0;i<unis.size;i++){
 
-    fprintf (pFile, "%d %d %d %d \n", unis.uni[i].size,  unis.uni[i].length,  unis.uni[i].f_nodes_size, unis.uni[i].t_nodes_size );
+    fprintf (pFile, "%d %d %d %d \n", unis.uni[i].size,  unis.uni[i].length,  unis.uni[i].f_size, unis.uni[i].t_size );
 
     fprintf (pFile, "\n");
   }
@@ -849,8 +934,6 @@ void find_and_print_contigs(read_raw list_of_reads[num_of_reads], unitigs &unis,
 
   fclose(pFile);
 #endif
-
-
 }
 
 
@@ -858,7 +941,6 @@ void find_and_print_contigs(read_raw list_of_reads[num_of_reads], unitigs &unis,
 //
 //HW3 codes for finding contigs end here
 //
-
 
 
 int main(){
@@ -875,8 +957,8 @@ int main(){
   //HW2 ends
  
   //HW3 finds a contig
-  con contigs;
-  find_and_print_contigs(list_of_reads,unis,contigs);
+  con contig;
+  find_and_print_a_contig(list_of_reads,unis,contig);
   //HW3 ends
 
 
@@ -884,28 +966,6 @@ int main(){
 }
 
 /*
-
-int count_the_num_of_connections(vector<vector<vector<int> > > &unitigs,int &num_of_unitigs,vector<vector<int> > &unitigs_info, int unitigs_con_count[][3]){
-
-  int i;
-  int total_count=0;
-  
-  for (i=0;i<num_of_unitigs;i++){
-    
-    if (unitigs[i][0][0]!=-1){
-      unitigs_con_count[i][1]=unitigs[i][0].size()/5;
-    } 
-    else unitigs_con_count[i][1]=0;
-    if(unitigs[i][unitigs_info[i][0]][0]!=-1){
-      unitigs_con_count[i][2]=unitigs[i][unitigs_info[i][0]].size()/5;
-    }
-    else unitigs_con_count[i][2]=0;
-
-    unitigs_con_count[i][0]=unitigs_con_count[i][1]+unitigs_con_count[i][2];
-    total_count+=unitigs_con_count[i][0];
-  }
-  return total_count;
-}
 
 void setup_unis(vector<vector<vector<int> > > &unitigs,vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info ){
 
@@ -1217,53 +1277,6 @@ int check_for_validity(vector<vector<vector<int> > > &unis, vector<vector<vector
   else {
     return 0;
   }
-
-	 
-#if 0
- FILE * pFile;
-    pFile = fopen ("lab01.temp","w");
-
-    for (i=0;i<contig_unis_len;i++){
-      fprintf (pFile, "%*d  ",4,contig_unis_list[i][0]);
-    }
-
-    fprintf (pFile, "\n ");
-    fprintf (pFile, "\n ");
-
-
-
-    for (i=0;i<total_num_of_reads_in_contig;i++){
-      fprintf (pFile, "%*d  ",4,i);
-     
-      for (j=0;j<4;j++){
-	fprintf (pFile, "%*d  ",4,contig_reads_all[i][j]);
-      }
-      fprintf (pFile, "\n ");
-    }
-    fprintf (pFile, "\n\n");
-    fclose (pFile);
-
-    pFile = fopen ("lab01.temp2","w");
-
-    for (i=0;i<unis.size();i++){
-   
-      for (j=0;j<unis[i].size();j++){
-
-	for (k=0;k<unis[i][j].size();k++){
-	  fprintf (pFile, "%*d  ",4,unis[i][j][k]);
-	}
-
-	for (k=0;k<unis_RC[i][j].size();k++){
-	  fprintf (pFile, "%*d  ",4,unis_RC[i][j][k]);
-	}
-      
-	fprintf (pFile, "\n ");
-      } 
-      fprintf (pFile, "\n\n"); 
-    }
- 
-    fclose (pFile);
-#endif
 }
 
 int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &contig_unis_list, int &mate_count, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads){
@@ -1493,6 +1506,7 @@ void record_and_print_a_contig(char *contig, int extra[][2], vector<vector<int> 
 
 int main(){
 
+
   int i,j,k;
   
   //read from fasta file
@@ -1533,6 +1547,10 @@ int main(){
   vector<vector<vector<int> > > unitigs;// contains all unitigs: unitig_number,edges 
   vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs
   find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
+
+
+
+
 
   vector<vector<int> > real_contig_unis_list; //unitig #, F/RC, starting pt
   vector<vector<int> > contig_reads;//read#, F/RC, starting pt
