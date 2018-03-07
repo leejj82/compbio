@@ -13,13 +13,13 @@ using namespace std;
 #if SAMPLE
 const int num_of_reads = 10;
 const int read_len = 250;
-const int l_bd_mp= 950;
-const int u_bd_mp= 1000;
+const int l_bd_mp= 700;//950-250
+const int u_bd_mp= 760;//1010-250
 #else
 const int num_of_reads = 300;
 const int read_len = 500;
-const int l_bd_mp= 1900;
-const int u_bd_mp= 3100;
+const int l_bd_mp= 1900;//2400-500
+const int u_bd_mp= 3100;//3600-500
 #endif
 
 //
@@ -347,8 +347,10 @@ public:
 
   vector<node> f_nodes;//nodes from which the unitig is connected
   vector<node> t_nodes;//nodes to which the unitig is connected
+
   int f_size;//# of f_nodes/f_unis
   int t_size;//# of t_nodes/t_unis
+
   unitig();
 };
 
@@ -779,16 +781,21 @@ void find_and_print_unitigs(unitigs &unis){
 class con:public unitigs{
 public:
   vector<unitig> uni_rc;// reverse complements of unis
-
+  int mate_count;//count the number of mate_pair
+  bool used[num_of_reads];//check if the node is used
+  
   int length;
-  vector<node> contig_unis_order;//unitigs order in contig
+  vector<node> unis_list;//unitigs list in contig
   vector<char> contig;
+
   con();
   void copy_from_unis(unitigs &);
   void set_up_nodes_locations();
 };
 
 con::con(){
+  mate_count=0;
+  fill(used, used+num_of_reads,0);
   length=0;
 }
 
@@ -893,19 +900,25 @@ void set_up_contig(unitigs &unis, con &contig){
 
 void check_self_pairing(con &contig){
 
-  int i,j,k;
   int mate_pair_distance;
+  bool zero_one_way, one_zero_way; //check if two reads are numbered in the consecutive order such as (0,1) or (33,32)-possible mate pair
 
-  for (i=0;i<num_of_unitigs;i++){
-    for (j=0;j<unitigs_info[i][0]-1;j++){ 
-      for (k=j+1;k<unitigs_info[i][0];k++){
-	if( ((unis[i][j][0]==unis[i][k][0]+1) && (unis[i][k][0]%2==0))  ||  ((unis[i][j][0]==unis[i][k][0]-1) && (unis[i][k][0]%2==1)) ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
-	  if(unis[i][j][1]==1 && unis[i][k][1]==0 ){// two reads are facing each other 5'-3' 3'-5' way
-	    
-	    mate_pair_distance=unis[i][k][2]-unis[i][j][2];
+  for (int i=0;i<contig.size;i++){
+    for (int j=0;j<contig.uni[i].size-3;j++){ 
+      for (int k=j+3;k<contig.uni[i].size;k++){
 
-	    if ((l_bd_mp <=mate_pair_distance ) && (u_bd_mp >=mate_pair_distance )){//two reads are distanced between 2400-3600
-	      mate_count+=1;
+	zero_one_way=((contig.uni[i].nodes[j].num==contig.uni[i].nodes[k].num-1) && (contig.uni[i].nodes[k].num%2==1));// 0-1 or 10-11 even-odd pair	
+	one_zero_way=((contig.uni[i].nodes[j].num==contig.uni[i].nodes[k].num+1) && (contig.uni[i].nodes[k].num%2==0));//1-0 or 15-14 odd-even pair
+
+	if( zero_one_way || one_zero_way ){//two reads are in the consecutive order such as (0,1) or (33,32)-possible mate pair
+	  if( contig.uni[i].nodes[j].ori==1 && contig.uni[i].nodes[k].ori==0 ){// two reads are facing each other 5'-3' 3'-5' way    
+
+	    mate_pair_distance=contig.uni[i].nodes[k].offset-contig.uni[i].nodes[j].offset;
+
+	    if ((l_bd_mp <=mate_pair_distance ) && (mate_pair_distance <=u_bd_mp )){//two reads are distanced between 2400-3600
+	      contig.mate_count+=1;
+	      contig.used[contig.uni[i].nodes[j].num]=1;
+	      contig.used[contig.uni[i].nodes[k].num]=1;
 	    }
 	  }
 	}
@@ -914,9 +927,39 @@ void check_self_pairing(con &contig){
   }
 }
 
+void really_find_contig(con &contig){
+    
+  int i,start_uni=0;
+
+  for (i=0;i<contig.size;i++){//if an end of a unitig does not have connecting edges, then the unitig can be a boundary of a contig
+    if(contig.uni[i].f_size==0 || contig.uni[i].t_size==0){
+      if(contig.uni[i].f_size+contig.uni[i].t_size==0)
+	cout<<"There is a unitig without any edges to outside"<<endl;
+      else{
+	start_uni=i;
+	break;
+      }
+    }
+  }
+
+  node first_uni;
+  first_uni.num=start_uni;
+  first_uni.ori=1;
+  first_uni.offset=0;
+  contig.unis_list.push_back(first_uni);//insert the first unitig in contig unitig list
+  
+  /*  if (iterate_for_finding_a_contig(contig))
+    cout<<"found a contig"<<endl;
+  else
+  cout<<"could not find a contig"<<endl;*/
+
+}
+
 void find_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,con &contig){
-  set_up_contig(unis, contig);//copy relevant info from unis, create reverse complement unitigs, find connections between unitigs  
+
+  set_up_contig(unis, contig);//copy relevant info from unis, create reverse complement unitigs, find connections between unitigs 
   check_self_pairing(contig);
+  really_find_contig(contig);
 }
 
 void print_contig(con &contig){ 
@@ -928,6 +971,7 @@ void find_and_print_a_contig(read_raw list_of_reads[num_of_reads], unitigs &unis
   print_contig(contig);
 
 #if 1
+  cout<<contig.mate_count;
   FILE * pFile;
   pFile = fopen ("lab01.temp","w");
 
@@ -1283,103 +1327,9 @@ int iterate_for_finding_a_contig(vector<vector<vector<int> > > &unis, vector<vec
 return 0;
 }
 
-void really_find_a_contig(vector<vector<vector<int> > > &unis, vector<vector<vector<int> > > &unis_RC,int &num_of_unitigs,vector<vector<int> > &unitigs_info,int unitigs_con_count[][3], vector<vector<vector<vector<int> > > > &unitigs_con, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads){
-    
-  int i,start_unitig=0;
-  
-  for (i=0;i<num_of_unitigs;i++){//if an end of a unitig does not have a connecting edges, then the unitig can be a boundary of a contig
-    if(unitigs_con_count[i][1]==0 || unitigs_con_count[i][2]==0){
-      if(unitigs_con_count[i][0]==0){
-	cout<<"There is a unitig without any edges to outside";
-      }
-      else{
-	start_unitig=i;
-	break;
-      }
-    }
-  }
-
-  vector<vector<int> > contig_unis_list; //unitig #, F/RC, starting pt
-  vector<int> a_unis(3);
-  a_unis[0]=start_unitig;
-  a_unis[1]=1;
-  a_unis[2]=0;
-  contig_unis_list.push_back(a_unis);//insert the first unitig
-
-  int mate_count=0;;//count mate_pair numbers
-  check_self_pairing(unis,mate_count,num_of_unitigs,unitigs_info);
-  
-  int result=iterate_for_finding_a_contig(unis, unis_RC, num_of_unitigs, unitigs_info, unitigs_con_count, unitigs_con,contig_unis_list,mate_count, real_contig_unis_list, contig_reads);
-
-  if (result==1){
-    cout<<"found a contig"<<"\n";
-  }
-  else
-    cout<<"could not find a contig"<<"\n";
-}
-
-void  find_a_contig(vector<vector<vector<int> > > &unitigs,vector<vector<int> > &unitigs_info, vector<vector<int> > &real_contig_unis_list, vector<vector<int> > &contig_reads){
-  
-  int num_of_unitigs=unitigs.size();//number of unitigs
-  int unitigs_con_count[num_of_unitigs][3];//number of connected unitigs count
-  int num_of_connections=count_the_num_of_connections(unitigs, num_of_unitigs, unitigs_info, unitigs_con_count);//number of total connections
-  
-  vector<vector<vector<int> > > unis(num_of_unitigs);
-  vector<vector<vector<int> > > unis_RC(num_of_unitigs);
-  setup_unis(unitigs, unis, unis_RC,num_of_unitigs, unitigs_info );
-  
-  int i,j,k;
- 
-  vector<vector<vector<vector<int> > > > unitigs_con(num_of_unitigs,vector<vector<vector<int> > >(2)); //record connected unitigs [prior unitig F/B next unitig F/B distance]
-  connected_unitigs(unitigs, num_of_unitigs,unitigs_info, unitigs_con_count,unitigs_con);
-
-  really_find_a_contig(unis,unis_RC,num_of_unitigs,unitigs_info,unitigs_con_count,unitigs_con, real_contig_unis_list, contig_reads);
-
-  
 
 
 
-#if 0
-  cout<<"unitigs_info"<<"\n";
-  for (i=0;i<num_of_unitigs;i++)
-    {
-      for(j=0;j<2;j++){
-	cout<<unitigs_info[i][j]<<"   ";
-      }
-      cout<<"\n";
-    }
-
-  cout<<"unitigs_con_count"<<"\n";
-  for (i=0;i<num_of_unitigs;i++){
-    for(j=0;j<3;j++){
-      cout<<unitigs_con_count[i][j]<<"   ";
-    }
-    cout<<"\n";
-  }
-    
-  cout<<"unitigs_con"<<"\n";
-  for (i=0;i<num_of_unitigs;i++){
-    for(j=0;j<2;j++){
-      cout<<i<<" "<<j<<" ";
-      for(k=0;k<unitigs_con[i][j].size();k++){
-
-	for (int l=0;l<unitigs_con[i][j][k].size();l++)
-	  cout<<unitigs_con[i][j][k][l]<<"   ";
-
-      }
-      cout<<"\n";
-  
-    }
-     
-  }
-  
-  for (i=0;i<unitigs_info[2][0];i++){
-    cout<< unis[2][i][0]<<" "<<unis[2][i][1]<<" "<<unis[2][i][2]<<"     "<< unis_RC[2][i][0]<<" "<< unis_RC[2][i][1]<<" "<< unis_RC[2][i][2]<<"\n";
-  }
-#endif
-
-
-}
 
 
 void record_and_print_a_contig(char *contig, int extra[][2], vector<vector<int> > &contig_reads, char list_of_reads[][read_len+1], char list_of_reads_RC[][read_len+1]){
@@ -1435,53 +1385,6 @@ void record_and_print_a_contig(char *contig, int extra[][2], vector<vector<int> 
 }
 
 int main(){
-
-
-  int i,j,k;
-  
-  //read from fasta file
-  char list_of_reads[num_of_reads][read_len + 1];
-  for (i=0;i<num_of_reads;i++){
-    list_of_reads[i][0] = '\0';
-  }
-
-  read_from_fasta(list_of_reads);
-
-  //define reverse complement reads
-  char  list_of_reads_RC[num_of_reads][read_len + 1];
-  for (i=0;i<num_of_reads;i++){
-    list_of_reads_RC[i][0] = '\0';
-  }
-  
-  reversecomplement(list_of_reads, list_of_reads_RC);
-
-  int list_of_olaps[num_of_reads*(num_of_reads-1)/2][6];//read1,read2,F/R(1/0),olap_length,first_read_location F/B(1/0) , deleted(1/0)
-
-  vector<vector<int> > list_of_exact_olaps;//save exact overlaps
-  int num_of_exact_olaps=0;
-  int num_of_edges_to_delete=0;
-  int location[num_of_reads+1]={0};//starting point of the read 1 in the list_of_olaps
-
-  int num_of_olaps=read_from_olaps(list_of_olaps,location,list_of_exact_olaps,num_of_exact_olaps,num_of_edges_to_delete);
-
-  record_edge_to_delete(list_of_olaps,num_of_olaps,location, num_of_edges_to_delete);
-
-  int num_of_edges_for_unitigs=num_of_olaps-num_of_edges_to_delete;
-
-  vector<vector<vector<int> > > edges_for_nodes(num_of_reads, vector<vector<int> >(2));//for each node, save outgoing edges, incoming edges
-  int edges_for_nodes_index[num_of_reads][4]={{0}}; //save #of total edges, # of outgoing edges,  # of incoming edges, #used or not
-  set_up_viable_edges(location, list_of_olaps, edges_for_nodes,edges_for_nodes_index, list_of_exact_olaps, num_of_exact_olaps);
-  vector<vector<vector<int> > > edges_for_nodes_RC(num_of_reads, vector<vector<int> >(2));//reverse complement list
-  set_up_edges_RC(edges_for_nodes, edges_for_nodes_RC);//setup RC
- 
-  vector<vector<vector<int> > > unitigs;// contains all unitigs: unitig_number,edges 
-  vector<vector<int> > unitigs_info; //contains # of reads, total lengths of unitigs
-  find_unitigs(unitigs,unitigs_info,edges_for_nodes,edges_for_nodes_RC, edges_for_nodes_index,list_of_exact_olaps, num_of_exact_olaps);
-
-
-
-
-
   vector<vector<int> > real_contig_unis_list; //unitig #, F/RC, starting pt
   vector<vector<int> > contig_reads;//read#, F/RC, starting pt
   find_a_contig(unitigs,unitigs_info,real_contig_unis_list, contig_reads);
@@ -1490,33 +1393,6 @@ int main(){
   int extra[num_of_reads][2];
   record_and_print_a_contig(contig,extra, contig_reads,list_of_reads,list_of_reads_RC);
 	
-#if 0
- FILE * pFile;
-    pFile = fopen ("lab01.real_contig_unis_list","w");
-
-    for (i=0;i<real_contig_unis_list.size();i++){
-      for (j=0;j<real_contig_unis_list[i].size();j++){
-	fprintf (pFile, "%*d  ",4,real_contig_unis_list[i][j]);
-      }
-      fprintf (pFile, "\n ");
-    }
-    fclose (pFile);
-
-    pFile = fopen ("lab01.contig_reads","w");
-
-    for (i=0;i<contig_reads.size();i++){
-      for (j=0;j<contig_reads[i].size();j++){
-	fprintf (pFile, "%*d  ",4,contig_reads[i][j]);
-      }
-      fprintf (pFile, "\n ");
-    }  
-    fclose (pFile);
-#endif
-  
-return 0;
-}
-
-
 
 
  */
