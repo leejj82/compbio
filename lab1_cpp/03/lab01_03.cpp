@@ -1155,7 +1155,7 @@ void record_and_print_a_contig(char *contig, int extra[][2], vector<vector<int> 
     }
   }
 
-  if (contig_reads[i][1]==1){
+  if (contig_reads[num_of_reads-1][1]==1){
     strncpy(contig+contig_reads[num_of_reads-1][2], list_of_reads[contig_reads[num_of_reads-1][0]],read_len);
   }
   else{ //reverse complement order
