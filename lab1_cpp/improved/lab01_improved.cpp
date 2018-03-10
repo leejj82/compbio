@@ -1137,26 +1137,36 @@ bool iterate_for_finding_a_contig(con &con, vector<node> &unis_list, contig &con
   return 0;
 }
 
-void really_find_contig(con &con,contig &contig){
+int really_find_contig(con &con,contig &contig){
 
-  int i,start_uni=0;
-
+  int i,indicator=0;
+  node first_uni;
+ 
   for (i=0;i<con.size;i++){//if an end of a unitig does not have connecting edges, then the unitig can be a boundary of a contig
-    if(con.uni[i].f_size==0 || con.uni[i].t_size==0){//we set it as the starting unitig
-      if(con.uni[i].f_size+con.uni[i].t_size==0)//if there is no linked unitig
-	cout<<"There is a unitig without any edges to outside"<<endl;
-      else{//if there is a linked unitig
-	start_uni=i;
-	break;
-      }
+    if(con.uni[i].f_size==0 && con.uni[i].t_size!=0){//we set it as the starting unitig
+      first_uni.set(i,1,0);
+      indicator=1;
+      break;
+    }
+    else if(con.uni[i].f_size!=0 && con.uni[i].t_size==0){//we set it as the starting unitig
+      first_uni.set(i,0,0);
+      indicator=1;
+      break;
+    }
+    else if(con.uni[i].f_size==0 && con.uni[i].t_size==0){//if there is no linked unitig
+      indicator=-1;
+      break;
     }
   }
 
-  //the case that con.uni[i].f_size>0 should be additionally implemented
-  
-  
-  node first_uni;
-  first_uni.set(start_uni,1,0);
+  if (indicator==0){
+    cout<<"There is no unitig with only one end connected. Not implemented yet."<<endl;
+    return 0;
+  }
+  else if (indicator==-1){
+    cout<<"There is a unitig without any edges to outside. Not implemented yet."<<endl;
+    return 0;
+  }
 
   vector<node> unis_list;
   unis_list.push_back(first_uni);//insert the first unitig in contig unitig list
@@ -1165,6 +1175,8 @@ void really_find_contig(con &con,contig &contig){
     cout<<"found a contig"<<endl;
   else
     cout<<"could not find a contig"<<endl;
+
+  return 0;
 }
 
 void find_raw_contig_and_extra(contig &contig,read_raw list_of_reads[num_of_reads]){
