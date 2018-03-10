@@ -7,6 +7,7 @@
 #include<fstream>
 #include<string>
 #include<vector>
+#include<iomanip>
 
 using namespace std;
 
@@ -101,21 +102,18 @@ void read_from_fasta(read_raw list_of_reads[num_of_reads]){
 
   if (infile.is_open()){
     while (infile >> str){
-      if (str[0]=='>'){
+      if (str[0]=='>')
 	i=atoi(str+1)-1;
-      }
-      else{
+      else
 	strcat(list_of_reads[i].read,str);
-      }
     }
   }
   infile.close();
 }
 
 void reverse_complement(read_raw list_of_reads[num_of_reads]){
-  for (int i=0;i<num_of_reads;i++){
+  for (int i=0;i<num_of_reads;i++)
     list_of_reads[i].reverse_complement();
-  }
 }
 
 void KMP_table(read_end_piece &piece){
@@ -126,16 +124,13 @@ void KMP_table(read_end_piece &piece){
   for (int pos=1;pos < 40;pos++){
     cnd=piece.failure[pos-1];
 
-    while((piece.end[pos]!=piece.end[cnd+1]) && (cnd>=0)){
+    while((piece.end[pos]!=piece.end[cnd+1]) && (cnd>=0))
       cnd=piece.failure[cnd];
-    }
 
-    if (piece.end[pos]==piece.end[cnd+1]){
+    if (piece.end[pos]==piece.end[cnd+1])
       piece.failure[pos]=cnd+1;
-    }
-    else {
+    else 
       piece.failure[pos]=-1;
-    }
   }
 }
 
@@ -241,6 +236,27 @@ void find_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_olaps){
 
 void print_olaps(olaps &list_of_olaps){
 
+
+  ofstream pFile;
+#if SAMPLE
+  pFile.open ("sample.olaps");
+#else
+  pFile.open ("lab01.olaps");
+#endif
+
+  for (int i=0;i<list_of_olaps.size;i++){
+    pFile<<" "<<setfill('0')<<setw(3)<< list_of_olaps.list[i].f_read+1<<"  ";
+    pFile<<setfill('0')<< setw(3)<<list_of_olaps.list[i].t_read+1<<"  ";
+    if (list_of_olaps.list[i].ori_t)
+      pFile<<"F  ";
+    else
+      pFile<<"R  ";
+    pFile<<setfill(' ')<<setw(4)<<list_of_olaps.list[i].offset<<"\n";
+  }
+  
+  pFile.close();
+
+  /*
   FILE * pFile;
 
 #if SAMPLE
@@ -260,6 +276,7 @@ void print_olaps(olaps &list_of_olaps){
   }
   
   fclose (pFile);
+  */
 }
 
 void find_and_print_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_olaps){
@@ -745,14 +762,40 @@ void find_unis(unitigs &unis){
 void print_unis(unitigs &unis){
 
   int i,j;
-  FILE * pFile;
 
+  
+  ofstream pFile;
+#if SAMPLE
+  pFile.open ("sample.unis");
+#else
+  pFile.open ("lab01.unis");
+#endif
+
+  for (i=0;i<unis.size;i++){
+    pFile<<"UNI  "<<setfill('0')<<setw(2)<<i+1<<" "<<setfill(' ')<<setw(5)<<unis.uni[i].size;//print the title
+    pFile<<" "<<setfill(' ')<<setw(6)<<unis.uni[i].length<<"\n";
+    for (j=0;j<unis.uni[i].size;j++){//print the rest
+      pFile<<"  "<<setfill('0')<< setw(3)<<unis.uni[i].nodes[j].num+1<<"  ";
+      if (unis.uni[i].nodes[j].ori)
+	pFile<<"F  ";
+      else
+	pFile<<"R  ";
+      pFile<<setfill(' ')<<setw(4)<<unis.uni[i].nodes[j].offset<<"\n";
+    }
+  }
+  
+  pFile.close();
+  
+  /*
+  FILE * pFile;
+  
 #if SAMPLE
   pFile = fopen ("sample.unis","w");
 #else
   pFile = fopen ("lab01.unis","w");
 #endif
-	
+
+  
   for (i=0;i<unis.size;i++){
     fprintf (pFile, "UNI  %02d %*d %*d\n", i+1, 5,unis.uni[i].size,6, unis.uni[i].length);//print the title
     for (j=0;j<unis.uni[i].size;j++){//print the rest
@@ -764,6 +807,9 @@ void print_unis(unitigs &unis){
       fprintf (pFile, "%*d\n",4,unis.uni[i].nodes[j].offset);
     }
   }
+  fclose (pFile);
+  
+ */
 }
 
 void find_and_print_unitigs(unitigs &unis){
@@ -1137,7 +1183,7 @@ bool iterate_for_finding_a_contig(con &con, vector<node> &unis_list, contig &con
   return 0;
 }
 
-int really_find_contig(con &con,contig &contig){
+bool really_find_contig(con &con,contig &contig){
 
   int i,indicator=0;
   node first_uni;
@@ -1171,12 +1217,15 @@ int really_find_contig(con &con,contig &contig){
   vector<node> unis_list;
   unis_list.push_back(first_uni);//insert the first unitig in contig unitig list
   
-  if (iterate_for_finding_a_contig(con, unis_list, contig))//if a contig is found
+  if (iterate_for_finding_a_contig(con, unis_list, contig)){//if a contig is found
     cout<<"found a contig"<<endl;
-  else
+    return 1;
+  }
+  else{
     cout<<"could not find a contig"<<endl;
-
-  return 0;
+    return 0;
+  }
+  
 }
 
 void find_raw_contig_and_extra(contig &contig,read_raw list_of_reads[num_of_reads]){
@@ -1210,14 +1259,39 @@ void find_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,contig &con
 
   con con;
   set_up_con(unis,con);//copy relevant info from unis, create reverse complement unitigs, find connections between unitigs 
-  really_find_contig(con, contig);//find contig
-  find_raw_contig_and_extra(contig, list_of_reads);//compute contig as a sequence of a,t,c,g
+  if (really_find_contig(con, contig))//find contig
+    find_raw_contig_and_extra(contig, list_of_reads);//compute contig as a sequence of a,t,c,g
 }
 
 void print_contig(contig &contig){ 
 
   int i,num1,num2;
+
+  ofstream pFile;
+#if SAMPLE
+  pFile.open ("sample.contig");
+#else
+  pFile.open ("lab01.contig");
+#endif
+
+  pFile<<">Contig\n";
+  pFile<< &contig.raw[0];
+
+#if SAMPLE
+  pFile.open ("sample.extra");
+#else
+  pFile.open ("lab01.extra");
+#endif
+
+  for(i=0;i<num_of_reads;i++){
+    pFile<<setfill('0')<<setw(3)<<i+1;
+    pFile<<setfill(' ')<<setw(5)<<contig.extra[i][0];
+    pFile<<setfill(' ')<<setw(5)<<contig.extra[i][1];  
+  }
   
+  pFile.close();
+  
+  /*
   FILE * pFile;
 
   pFile = fopen ("lab01.contig","w");
@@ -1236,7 +1310,8 @@ void print_contig(contig &contig){
     fprintf (pFile, "%*d\n",5,contig.extra[i][1]);  
   }
 
-  fclose (pFile); 
+  fclose (pFile);
+  */
 }
 
 void find_and_print_a_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,contig &contig){
