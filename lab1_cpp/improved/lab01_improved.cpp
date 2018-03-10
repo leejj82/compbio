@@ -783,10 +783,7 @@ public:
   vector<unitig> uni_rc;// reverse complements of unis
   int mate_count;//count the number of mate_pair
   bool used[num_of_reads];//check if the node is used
-  
   int length;
-  vector<node> unis_list;//unitigs list in contig
-  vector<char> contig;
 
   con();
   void copy_from_unis(unitigs &);
@@ -817,6 +814,21 @@ public:
 node_3::node_3(){
   not_mated=1;
 }
+
+class contig{
+public:
+  vector<node> nodes;// nodes
+  vector<node> unis_list;//unitigs list in contig
+  int length;
+  vector<char> raw;
+  contig();
+};
+
+contig::contig(){
+  length=0;
+}
+
+
 
 void find_unis_conn (node &Node, unitigs &contig,bool F){
  
@@ -1052,7 +1064,7 @@ int check_for_validity(vector<node> &new_unis_list,int & mate_ct_2,con &contig){
   }
    
   if (reads_check[num_of_reads]==num_of_reads){
-    contig.unis_list=new_unis_list;
+    // contig.unis_list=new_unis_list;
 
     vector<int> temp(3);
     for (i=0;i<total_num_of_reads_in_contig;i++){
@@ -1142,7 +1154,7 @@ int iterate_for_finding_a_contig(con &contig, vector<node> &unis_list){
   
   last_uni=unis_list[con_size-1];
 
-  cout<<last_uni.num<<" "<<last_uni.ori<<" "<<last_uni.offset<<"\n";
+  //cout<<last_uni.num<<" "<<last_uni.ori<<" "<<last_uni.offset<<"\n";
 
   if(last_uni.ori){//front order
     for (k=0;k<contig.uni[last_uni.num].t_size;k++){
@@ -1251,7 +1263,7 @@ int iterate_for_finding_a_contig(con &contig, vector<node> &unis_list){
 }
 
 void really_find_contig(con &contig){
-    
+
   int i,start_uni=0;
 
   for (i=0;i<contig.size;i++){//if an end of a unitig does not have connecting edges, then the unitig can be a boundary of a contig
@@ -1269,80 +1281,32 @@ void really_find_contig(con &contig){
   first_uni.num=start_uni;
   first_uni.ori=1;
   first_uni.offset=0;
-  contig.unis_list.push_back(first_uni);//insert the first unitig in contig unitig list
+
+  vector<node> unis_list;
+  unis_list.push_back(first_uni);//insert the first unitig in contig unitig list
   
-  if (iterate_for_finding_a_contig(contig, contig.unis_list))//if a contig is found
+  if (iterate_for_finding_a_contig(contig, unis_list))//if a contig is found
     cout<<"found a contig"<<endl;
   else
     cout<<"could not find a contig"<<endl;
 }
 
-void find_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,con &contig){
+void find_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,contig &contig){
 
-  set_up_contig(unis,contig);//copy relevant info from unis, create reverse complement unitigs, find connections between unitigs 
-  check_self_pairing(contig);
-  really_find_contig(contig);
+  con cont;
+  set_up_contig(unis,cont);//copy relevant info from unis, create reverse complement unitigs, find connections between unitigs 
+  check_self_pairing(cont);
+  really_find_contig(cont);
 }
 
-void print_contig(con &contig){ 
+void print_contig(contig &contig){ 
 
 }
 
-void find_and_print_a_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,con &contig){
+void find_and_print_a_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,contig &contig){
   find_contig(list_of_reads, unis, contig);
   print_contig(contig);
-
-#if 1
-  FILE * pFile;
-  pFile = fopen ("lab01.temp","w");
-
-  for (int i=0;i<unis.size;i++){
-    for (int j=0;j<contig.uni[i].size;j++){
-      fprintf (pFile, "%d %d %d   ", contig.uni[i].nodes[j].num, contig.uni[i].nodes[j].ori, contig.uni[i].nodes[j].offset );
-      fprintf (pFile, "%d %d %d   ", contig.uni_rc[i].nodes[j].num, contig.uni_rc[i].nodes[j].ori, contig.uni_rc[i].nodes[j].offset );
-
-      fprintf (pFile, "\n");
-    }
-    fprintf (pFile, "\n\n\n\n\n");
-  }
- 
-  for (int i=0;i<unis.size;i++){
-    /*    fprintf (pFile, "%d %d \n", unis.uni[i].f_size, unis.uni[i].t_size );
-    for (int j=0;j<unis.uni[i].f_size;j++){
-      fprintf (pFile, "%d %d \n", unis.uni[i].f_nodes[j].num, unis.uni[i].f_nodes[j].ori );
-    }
-    for (int j=0;j<unis.uni[i].t_size;j++){
-      fprintf (pFile, "%d %d \n", unis.uni[i].t_nodes[j].num, unis.uni[i].t_nodes[j].ori );
-    }
-    fprintf (pFile, "\n");*/
-
-    fprintf (pFile, "%d %d \n", contig.uni[i].f_size, contig.uni[i].t_size );
-    for (int j=0;j<contig.uni[i].f_size;j++){
-      fprintf (pFile, "%d %d \n", contig.uni[i].f_nodes[j].num, contig.uni[i].f_nodes[j].ori );
-    }
-    for (int j=0;j<contig.uni[i].t_size;j++){
-      fprintf (pFile, "%d %d \n", contig.uni[i].t_nodes[j].num, contig.uni[i].t_nodes[j].ori );
-    }
-    fprintf (pFile, "\n");
-
-    
-    fprintf (pFile, "%d %d \n", contig.uni_rc[i].f_size, contig.uni_rc[i].t_size );
-    for (int j=0;j<contig.uni_rc[i].f_size;j++){
-      fprintf (pFile, "%d %d \n", contig.uni_rc[i].f_nodes[j].num, contig.uni_rc[i].f_nodes[j].ori );
-    }
-    for (int j=0;j<contig.uni_rc[i].t_size;j++){
-      fprintf (pFile, "%d %d \n", contig.uni_rc[i].t_nodes[j].num, contig.uni_rc[i].t_nodes[j].ori );
-    }
-    fprintf (pFile, "\n");
-  }
-
-  fprintf (pFile, "\n\n\n\n\n");
-
-  fclose(pFile);
-#endif
 }
-
-
 
 //
 //HW3 codes for finding contigs end here
@@ -1363,10 +1327,9 @@ int main(){
   //HW2 ends
  
   //HW3 finds a contig
-  con contig;
+  contig contig;
   find_and_print_a_contig(list_of_reads,unis,contig);
   //HW3 ends
-
 
   return 0;
 }
