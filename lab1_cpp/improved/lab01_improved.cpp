@@ -1152,6 +1152,9 @@ void really_find_contig(con &con,contig &contig){
     }
   }
 
+  //the case that con.uni[i].f_size>0 should be additionally implemented
+  
+  
   node first_uni;
   first_uni.set(start_uni,1,0);
 
