@@ -1239,12 +1239,15 @@ void find_raw_contig_and_extra(contig &contig,read_raw list_of_reads[num_of_read
   }
 }
 
-void find_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,contig &contig){
+bool find_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,contig &contig){
 
   con con;
   set_up_con(unis,con);//copy relevant info from unis, create reverse complement unitigs, find connections between unitigs 
-  if (really_find_contig(con, contig))//find contig
+  if (really_find_contig(con, contig)){//find contig
     find_raw_contig_and_extra(contig, list_of_reads);//compute contig as a sequence of a,t,c,g
+    return 1;
+  }
+  return 0;
 }
 
 void print_contig(contig &contig){ 
@@ -1299,8 +1302,8 @@ void print_contig(contig &contig){
 }
 
 void find_and_print_a_contig(read_raw list_of_reads[num_of_reads], unitigs &unis,contig &contig){
-  find_contig(list_of_reads, unis, contig);
-  print_contig(contig);
+  if(find_contig(list_of_reads, unis, contig))
+    print_contig(contig);
 }
 
 //
