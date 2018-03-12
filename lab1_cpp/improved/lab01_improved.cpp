@@ -180,7 +180,7 @@ bool find_overlaps_of_two_reads(read_raw &first, read_raw &second,olap &Olap, re
 
   bool found=0;
   
-  if (KMP_search(first.read, Read_ends.right, second.read, Olap)){
+  if (KMP_search(first.read, Read_ends.right, second.read, Olap)){//right end matches the second read
     Olap.ori_t=1;
     found=1;
   }
@@ -235,7 +235,6 @@ void find_olaps(read_raw list_of_reads[num_of_reads], olaps &list_of_olaps){
 }
 
 void print_olaps(olaps &list_of_olaps){
-
 
   ofstream pFile;
 #if SAMPLE
@@ -428,10 +427,12 @@ void read_from_olaps(olaps_2 &l_olaps){
       else{//two reads are not identical
        	
 	temp_olap.offset=offset;
+
 	if ( offset >0)
 	  temp_olap.r_arrow=1;
 	else 
 	  temp_olap.r_arrow=0;	
+
 	l_olaps.f_read_loc[read_1]=num_of_olaps;
 	temp_olap.deleted=0;
 	l_olaps.list.push_back(temp_olap);
@@ -444,13 +445,14 @@ void read_from_olaps(olaps_2 &l_olaps){
   for (i=1;i<num_of_reads;i++){//fill the f_read location table
     if (l_olaps.f_read_loc[i]==0)
       l_olaps.f_read_loc[i]=l_olaps.f_read_loc[i-1];
-    else l_olaps.f_read_loc[i]+=1;
+    else
+      l_olaps.f_read_loc[i]+=1;
   }
   l_olaps.f_read_loc[num_of_reads]=num_of_olaps;
 
   for (i=0;i<l_olaps.exact_size;i++){//delete olaps connecting exact olaps
     for (j=0;j<num_of_olaps;j++){
-      if((l_olaps.exact[i].t_read==l_olaps.list[j].f_read || l_olaps.exact[i].t_read==l_olaps.list[j].t_read) && l_olaps.list[j].deleted==0){
+      if((l_olaps.exact[i].t_read==l_olaps.list[j].f_read || l_olaps.exact[i].t_read==l_olaps.list[j].t_read) && !l_olaps.list[j].deleted){
 	l_olaps.list[j].deleted=1;
 	l_olaps.deleted_size++;
       }
@@ -482,15 +484,15 @@ void record_edge_to_delete(olaps_2 &l_olaps){
 	      arrow2=l_olaps.list[l].r_arrow;
 	      if (l_olaps.list[j].ori_t==0)
 		arrow2=1-arrow2;
-	      if (arrow0==arrow1 && arrow1==arrow2 && l_olaps.list[k].deleted==0){
+	      if (arrow0==arrow1 && arrow1==arrow2 && !l_olaps.list[k].deleted){
 		l_olaps.list[k].deleted=deleted;
 		l_olaps.deleted_size++;
 	      }
-	      else if (arrow0==arrow1 && arrow0!=arrow2 && l_olaps.list[j].deleted==0){
+	      else if (arrow0==arrow1 && arrow0!=arrow2 && !l_olaps.list[j].deleted){
 		l_olaps.list[j].deleted=deleted;
 		l_olaps.deleted_size++;
 	      }
-	      else if (arrow0!=arrow1 && arrow1==arrow2 && l_olaps.list[l].deleted==0){
+	      else if (arrow0!=arrow1 && arrow1==arrow2 && !l_olaps.list[l].deleted){
     		l_olaps.list[l].deleted=deleted;
 		l_olaps.deleted_size++;
       	      }
@@ -526,7 +528,7 @@ void set_up_viable_edges(olaps_2 &l_olaps){
   
   for (i=0;i<num_of_reads;i++){
     for (j=l_olaps.f_read_loc[i];j<l_olaps.f_read_loc[i+1];j++){
-      if (l_olaps.list[j].deleted==0){ //not deleted
+      if (!l_olaps.list[j].deleted){ //not deleted
 	if (l_olaps.list[j].r_arrow){ //location of first read front
 	  
 	  edge_setup(l_olaps.list[j].t_read,l_olaps.list[j].ori_t, l_olaps.list[j].offset,l_olaps.node[i],0);
@@ -566,7 +568,6 @@ void insert_node_in_uni (node &current_node, olaps_2 &l_olaps,unitig &uni ){
   uni.nodes.push_back(current_node);//insert current node in the unitig
   uni.size++;
  
-  
   if (l_olaps.node[current_node.num].exact_copy_count>0){//take care of exact nodes
     node temp_node;
     for (int i=0;i<l_olaps.exact_size;i++){
