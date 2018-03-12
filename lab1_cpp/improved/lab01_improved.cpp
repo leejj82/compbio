@@ -581,36 +581,35 @@ void insert_node_in_uni (node &current_node, olaps_2 &l_olaps,unitig &uni ){
   }
 }
 
-void insert_boundary_nodes(vector<node> &next_nodes,unitig &uni, bool prior, bool F){
+void insert_bdry(vector<node> &ft_nodes,int &ft_size,vector<node> & next_nodes, bool F){
+
   int i;
-  bool RC=!F;
   
-  if(prior){//previous nodes
-    uni.f_nodes=next_nodes;
-    uni.f_size=next_nodes.size();
-    if(RC){//reverse complement case
-      for (i=0;i<uni.f_size;i++)
-	uni.f_nodes[i].ori=!uni.f_nodes[i].ori;
-    }
+  ft_nodes=next_nodes;
+  ft_size=next_nodes.size();
+  if(!F){//reverse complement case
+    for (i=0;i<ft_size;i++)
+      ft_nodes[i].ori=!ft_nodes[i].ori;
   }
-  else{
-    uni.t_nodes=next_nodes;
-    uni.t_size=(int)(next_nodes.size());
-    if(RC){
-      for (i=0;i<uni.t_size;i++)
-	uni.t_nodes[i].ori=!uni.t_nodes[i].ori;
-    }
-  }
+}
+
+void insert_boundary_nodes(vector<node> &next_nodes,unitig &uni, bool prior, bool F){
+  
+  if(prior)//previous nodes
+    insert_bdry(uni.f_nodes,uni.f_size,next_nodes,F);
+  else
+    insert_bdry(uni.t_nodes,uni.t_size, next_nodes,F);
 }
 
 
 bool one_and_one(edges_node *c_node, olaps_2 &l_olaps,bool prior, bool F){
+  
   bool current_ct;//1 if current node has one edge toward previous or next node
   bool next_ct;//1 if the previous or next node has one edge toward current node
   bool RC=!F;//F=1 current node forward, RC=1 current node RC
   bool forward; //orientation of the previous or next node
   bool t_edge_ct, f_edge_ct;
-  
+
   if(prior && F){
     forward=(*c_node).f_node[0].ori;
     t_edge_ct=l_olaps.node[(*c_node).f_node[0].num].t_edge_ct==1;
@@ -642,7 +641,7 @@ bool one_and_one(edges_node *c_node, olaps_2 &l_olaps,bool prior, bool F){
 
   next_ct=(forward &&t_edge_ct)||(!forward  && f_edge_ct );
    
-  return (current_ct && next_ct);//returns if the previous node has one outgoing edge and the current node has one incoming edge
+  return (current_ct && next_ct);//returns 1 if the previous node has one outgoing edge and the current node has one incoming edge
 }
 
 void find_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni,bool prior){
@@ -663,7 +662,7 @@ void find_nodes(node &current_node,olaps_2 &l_olaps,unitig &uni,bool prior){
 	  find_nodes((*c_node).f_node[0],l_olaps, uni, prior);
 	}
 	else
-	  insert_boundary_nodes((*c_node).f_node,uni,prior,F);
+	  insert_boundary_nodes((*c_node).f_node,uni,prior,F);//insert nodes on the boundary of the unitig
       }
     }
     else{ //current node is in the reverse complement order
@@ -874,42 +873,27 @@ public:
   int length;
 };
 
+
 void find_unis_conn (node &Node, con &con,bool F){
- 
-  for (int j=0;j<con.size;j++){
-    if (F){
-      if(Node.num==con.uni[j].nodes[con.uni[j].size-1].num){
-	if(Node.ori==con.uni[j].nodes[con.uni[j].size-1].ori){
-	  Node.num=j;
-	  Node.ori=1;
-	  break;
-	}
+
+  int j;
+  
+  for (j=0;j<con.size;j++){
+    if(Node.num==con.uni[j].nodes[con.uni[j].size-1].num){
+      if(F==(Node.ori==con.uni[j].nodes[con.uni[j].size-1].ori)){
+	Node.num=j;
+	Node.ori=F;
+	break;
       }
-      else if(Node.num==con.uni[j].nodes[0].num){
-	if(Node.ori!=con.uni[j].nodes[0].ori){
-	  Node.num=j;
-	  Node.ori=0;
-	  break;
-	}
-      }	
     }
-    else {
-      if (Node.num==con.uni[j].nodes[con.uni[j].size-1].num){
-	if(Node.ori!=con.uni[j].nodes[con.uni[j].size-1].ori){
-	  Node.num=j;
-	  Node.ori=0;
-	  break;
-	}
+    else if(Node.num==con.uni[j].nodes[0].num){
+      if((!F)==(Node.ori==con.uni[j].nodes[0].ori)){
+	Node.num=j;
+	Node.ori=!F;
+	break;
       }
-      else if(Node.num==con.uni[j].nodes[0].num){
-	if(Node.ori==con.uni[j].nodes[0].ori){
-	  Node.num=j;
-	  Node.ori=1;
-	  break;
-	}
-      }	
-    }
-  }
+    }	
+  } 
 }
 
 void set_up_unis_connections(con &con){//find connections between unitigs and save the info in contig
@@ -947,9 +931,8 @@ void set_up_uni_rc_and_node_location(con &con){ //calculate node locations in th
 
     reverse(con.uni_rc[i].nodes.begin(),con.uni_rc[i].nodes.end());//compute reverse complement unitig
     
-    for (j=0;j<con.uni[i].size;j++){
+    for (j=0;j<con.uni[i].size;j++)
       con.uni_rc[i].nodes[j].ori=!con.uni_rc[i].nodes[j].ori;
-    }
 
     temp0=con.uni_rc[i].nodes[0].offset;   //compute the offset based on read 0
     con.uni_rc[i].nodes[0].offset=0;   
