@@ -719,7 +719,6 @@ void insert_current_node_and_find_prior_and_posterior_nodes (node &current_node,
 
 void find_a_unitig(int &starting_point, olaps_2 &l_olaps, unitigs &unis){
   
-  bool condition;
   bool connected_edges_to_the_current_node=l_olaps.node[starting_point].total_edge_ct>0;
  
   if (connected_edges_to_the_current_node){ //there exists at least one edge connected to the node   
