@@ -1,3 +1,6 @@
+Bash edit
+emacs -nw ~/.bashrc
+
 wget http://cbcb.umd.edu/confcour/CMSC828H-materials/lab1.tar.gz
 tar xvzf lab1.tar.gz
 
