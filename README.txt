@@ -1,3 +1,8 @@
+
+
+read text file from the first few lines 
+less <filename>
+
 Bash edit
 emacs -nw ~/.bashrc
 
