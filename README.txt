@@ -1,4 +1,8 @@
+>wc -l <filename>
+count the number of lines in a text file
 
+>sed -n '4149273,4149300p;4149300q' genome.fa  > genome.cut
+copy lines from genome.fa and insert in genome.cut
 
 read text file from the first few lines 
 less <filename>
