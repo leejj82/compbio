@@ -1,3 +1,14 @@
+name a path with hisat2 and check it
+export hisat2=/project/bioinformatics/Kim_lab/s179814/hisat2
+echo $hisat2
+
+
+
+in emacs python mass-comment/uncomment 
+C-x r t cursor should be in the first column of the last row
+C-x r k cursor should be in the second column of the last row
+
+
 >wc -l <filename>
 count the number of lines in a text file
 
