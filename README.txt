@@ -1,3 +1,16 @@
+hisat2 example:
+hisat2-build $hisat2/example/reference/22_20-21M.fa --snp $hisat2/example/reference/22_20-21M.snp 22_20-21M_snp
+hisat2 -f -x $hisat2/example/index/22_20-21M_snp -U $hisat2/example/reads/reads_1.fa -S eg1.sam
+head eg1.sam
+hisat2 -f -x $hisat2/example/index/22_20-21M_snp -1 $hisat2/example/reads/reads_1.fa -2 $hisat2/example/reads/reads_2.fa -S eg2.sam
+samtools view -bS eg2.sam > eg2.bam
+samtools sort eg2.bam -o eg2.sorted.bam
+samtools mpileup -uf $hisat2/example/reference/22_20-21M.fa eg2.sorted.bam | bcftools call -c -v --output-type b  | bcftools view -m 2 --output-type b - > eg2.raw.bcf
+bcftools view eg2.raw.bcf
+
+
+
+
 name a path with hisat2 and check it
 export hisat2=/project/bioinformatics/Kim_lab/s179814/hisat2
 echo $hisat2
